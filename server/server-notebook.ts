@@ -178,6 +178,10 @@ export class ServerNotebook extends Notebook {
   public exportLatex(): LatexData {
     const ourPreamble = `\\documentclass[12pt]{article}
 \\usepackage{amsmath}
+\\usepackage{graphicx}
+\\usepackage{epstopdf}
+\\epstopdfDeclareGraphicsRule{.gif}{png}{.png}{convert gif:#1 png:\\OutputFile}
+\\AppendGraphicsExtensions{.gif}
 \\begin{document}
 \\title{Magic Math Table}
 \\author{me}
@@ -194,14 +198,31 @@ export class ServerNotebook extends Notebook {
 
     const tlso = this.topLevelStyleOrder();
     const cells = tlso.map( tls => {
+      var retLaTeX = "";
       const latex = this.findChildStylesOfType(tls,'LATEX');
       if (latex.length > 1) { // here we have to have some disambiguation
-        return "ambiguous: " +displayFormula(latex[0].data);
+        retLaTeX += "ambiguous: " +displayFormula(latex[0].data);
       } else if (latex.length == 1) {  // here it is obvious, maybe...
-        return displayFormula(latex[0].data);
+        retLaTeX += displayFormula(latex[0].data);
       } else { // here we examine the type more carefully...
-        return "unknown type";
+        retLaTeX += "unknown type";
       }
+      const image = this.findChildStylesOfType(tls,'IMAGE','PLOT');
+      if (image.length > 0) {
+        const plot = image[0];
+        debug("plot data",plot.data);
+        //        const localpath = "/Users/robertread/PubInv/math-tablet/server/public";
+//        const plotpng = plot.data.replace(".gif",".png");
+        const apath = this.absoluteDirectoryPath();
+
+        const graphics = `\\includegraphics{${apath}${plot.data}}`;
+        retLaTeX += graphics;
+        debug("graphics",graphics);
+        if (image.length > 1) {
+          retLaTeX += " more than one plot, not sure how to handle that";
+        }
+      }
+      return retLaTeX;
     });
     return ourPreamble +
       cells.join('\n') +

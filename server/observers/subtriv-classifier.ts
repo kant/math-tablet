@@ -80,7 +80,7 @@ export class SubtrivClassifierObserver implements ObserverInstance {
     const urlPath = "/tmp";
     var uuid4 = uuid();
     debug(uuid4);
-    const plotName = "quadplot" + evaluationStyle.id + '-' + uuid4 + ".gif";
+    const plotName = "quadplot" + evaluationStyle.id + '-' + uuid4 + ".png";
     const fullFilename = targetPath + "/" + plotName;
 
     // We are only plottable if we make the normal substitutions...
