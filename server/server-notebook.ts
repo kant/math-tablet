@@ -176,14 +176,36 @@ export class ServerNotebook extends Notebook {
   }
 
   public exportLatex(): LatexData {
-    return `\\documentclass[12pt]{article}
-\\usepackage{lingmacros}
-\\usepackage{tree-dvips}
+    const ourPreamble = `\\documentclass[12pt]{article}
+\\usepackage{amsmath}
 \\begin{document}
-\\section*{Magic Math Tablet: ${this._path} }
-\\subsection*{How to handle topicalization}
-\\end{document}
+\\title{Magic Math Table}
+\\author{me}
+\\maketitle
 `;
+    const close = `\\end{document}`;
+
+    // Our basic approach is to apply a function to each
+    // top level style in order. This function will preferentially
+    // take the LaTeX if there is any.
+    function displayFormula(f : string) : string {
+      return `\\begin{align}\n ${f} \\end{align}\n`;
+    }
+
+    const tlso = this.topLevelStyleOrder();
+    const cells = tlso.map( tls => {
+      const latex = this.findChildStylesOfType(tls,'LATEX');
+      if (latex.length > 1) { // here we have to have some disambiguation
+        return "ambiguous: " +displayFormula(latex[0].data);
+      } else if (latex.length == 1) {  // here it is obvious, maybe...
+        return displayFormula(latex[0].data);
+      } else { // here we examine the type more carefully...
+        return "unknown type";
+      }
+    });
+    return ourPreamble +
+      cells.join('\n') +
+      close;
   }
 
   // Remove fields with an underscore prefix, because they are not supposed to be persisted.
