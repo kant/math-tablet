@@ -211,11 +211,12 @@ export class ServerNotebook extends Notebook {
       if (image.length > 0) {
         const plot = image[0];
         debug("plot data",plot.data);
-        //        const localpath = "/Users/robertread/PubInv/math-tablet/server/public";
-//        const plotpng = plot.data.replace(".gif",".png");
         const apath = this.absoluteDirectoryPath();
-
-        const graphics = `\\includegraphics{${apath}${plot.data}}`;
+        // The notebook name is both a part of the plot.data,
+        // AND is a part of the absolute path. So we take only
+        // the final file name of local.data here.
+        const final = plot.data.split("/");
+        const graphics = `\\includegraphics{${apath}/${final[2]}}`;
         retLaTeX += graphics;
         debug("graphics",graphics);
         if (image.length > 1) {
