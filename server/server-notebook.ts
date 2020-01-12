@@ -29,12 +29,13 @@ import { assert } from 'chai';
 import {
   Notebook, NotebookObject, NotebookChange, StyleObject, StyleRole, StyleType, StyleSource, StyleId,
   RelationshipObject, StyleMoved, StylePosition, VERSION, StyleChanged, RelationshipDeleted,
-  RelationshipInserted, StyleIdDoesNotExistError, StyleInserted, StyleDeleted, StyleConverted
+  RelationshipInserted, RelationshipMap, StyleIdDoesNotExistError, StyleInserted, StyleDeleted,
+  StyleConverted, StyleMap,
 } from '../client/notebook';
 import {
   NotebookChangeRequest, StyleMoveRequest, StyleInsertRequest, StyleChangeRequest,
   RelationshipDeleteRequest, StyleDeleteRequest, RelationshipInsertRequest,
-  StylePropertiesWithSubprops, ChangeNotebookOptions, LatexData, NotebookPath, StyleConvertRequest
+  StylePropertiesWithSubprops, ChangeNotebookOptions, LatexData, NotebookPath, StyleConvertRequest,
 } from '../client/math-tablet-api';
 
 import {
@@ -380,7 +381,7 @@ export class ServerNotebook extends Notebook {
     if (!mp) {
       throw new Error(`INTERNAL ERROR: did not produce ancenstor: ${style.id}`);
     }
-    rs.forEach(r => {
+    for (const r of rs) {
       try {  // TODO: I don't know why this can be an error....
         // doing a catch here seems to make it work but this is a concurrency
         // problem, one way or another...we should not have relationship
@@ -406,14 +407,14 @@ export class ServerNotebook extends Notebook {
         console.error("from id missing",r.fromId);
         console.error(this);
       }
-    });
+    };
     return symbolStyles;
   }
 
   public getSymbolStylesThatDependOnMe(style:StyleObject): StyleObject[] {
     const rs = this.allRelationships();
     var symbolStyles: StyleObject[] = [];
-    rs.forEach(r => {
+    for (const r of rs) {
       if (r.fromId == style.id) {
         try {
           symbolStyles.push(this.getStyle(r.toId));
@@ -424,15 +425,23 @@ export class ServerNotebook extends Notebook {
           }
         }
       }
-    });
+    };
     return symbolStyles;
   }
 
   public toJSON(): NotebookObject {
+    const relationshipMap = <RelationshipMap>{};
+    for (const [relationshipId, relationship] of this.relationshipMap.entries()) {
+      relationshipMap[relationshipId] = relationship;
+    }
+    const styleMap = <StyleMap>{};
+    for (const [styleId, style] of this.styleMap.entries()) {
+      styleMap[styleId] = style;
+    }
     const rval: NotebookObject = {
       nextId: this.nextId,
-      relationshipMap: this.relationshipMap,
-      styleMap: this.styleMap,
+      relationshipMap,
+      styleMap,
       styleOrder: this.styleOrder,
       version: VERSION,
     }

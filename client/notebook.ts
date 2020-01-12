@@ -287,10 +287,10 @@ export class Notebook {
   // Constructor
 
   public constructor(obj?: NotebookObject) {
+    this.relationshipMap = new Map();
+    this.styleMap = new Map();
     if (!obj) {
       this.nextId = 1;
-      this.relationshipMap = {};
-      this.styleMap = {};
       this.styleOrder = [];
     } else {
       // LATER: More thorough validation of the object.
@@ -299,8 +299,12 @@ export class Notebook {
         throw new Error(`Invalid notebook version ${obj.version}. Expect version ${VERSION}`);
       }
       this.nextId = obj.nextId;
-      this.relationshipMap = obj.relationshipMap;
-      this.styleMap = obj.styleMap;
+      for (const relationshipId in Object.keys(obj.relationshipMap)) {
+        this.relationshipMap.set(parseInt(relationshipId), obj.relationshipMap[relationshipId] )
+      }
+      for (const styleId in Object.keys(obj.styleMap)) {
+        this.styleMap.set(parseInt(styleId), obj.styleMap[styleId] )
+      }
       this.styleOrder = obj.styleOrder;
     }
   }
@@ -312,46 +316,44 @@ export class Notebook {
   // Instance Property Functions
 
   // REVIEW: Return an iterator?
-  public allRelationships(): RelationshipObject[] {
-    // REVIEW: Does it matter whether we return relationships in sorted order or not?
-    //       This could be as simple as: return Object.values(this.relationshipMap);
-    //       Caller can sort if necessary.
-    const sortedIds: RelationshipId[] = Object.keys(this.relationshipMap).map(k=>parseInt(k,10)).sort();
-    return sortedIds.map(id=>this.relationshipMap[id]);
+  public allRelationships(): IterableIterator<RelationshipObject> {
+    return this.relationshipMap.values();
   }
 
-  public relationshipsOf(id: StyleId): RelationshipObject[] {
-    return this.allRelationships().filter(r=>(r.fromId == id || r.toId == id));
+  public relationshipsOf(id: StyleId): IterableIterator<RelationshipObject> {
+    // TODO: Don't instantiate into array.
+    return Array.from(this.allRelationships()).filter(r=>(r.fromId == id || r.toId == id)).values();
   }
 
   // REVIEW: Return an iterator?
-  public allStyles(): StyleObject[] {
-    // REVIEW: Does it matter whether we return relationships in sorted order or not?
-    //       This could be as simple as: return Object.values(this.relationshipMap);
-    //       Caller can sort if necessary.
-    const sortedIds: StyleId[] = Object.keys(this.styleMap).map(k=>parseInt(k,10)).sort();
-    return sortedIds.map(id=>this.getStyle(id));
+  public allStyles(): IterableIterator<StyleObject> {
+    return this.styleMap.values();
   }
 
   // Returns all thoughts in notebook order
   // REVIEW: Return an iterator?
   public topLevelStyleOrder(): StyleId[] { return this.styleOrder; }
 
-  public childStylesOf(id: StyleId): StyleObject[] {
-    return this.allStyles().filter(s=>(s.parentId==id));
+  public childStylesOf(id: StyleId): IterableIterator<StyleObject> {
+    // TODO: Don't instantiate into array.
+    return Array.from(this.allStyles()).filter(s=>(s.parentId==id)).values();
   }
 
   public getRelationship(id: RelationshipId): RelationshipObject {
-    const rval = this.relationshipMap[id];
+    const rval = this.relationshipMap.get(id);
     if (!rval) { throw new RelationshipIdDoesNotExistError(`Relationship ${id} doesn't exist.`); }
     return rval;
   }
 
   public getStyle(id: StyleId): StyleObject {
-    const rval = this.styleMap[id];
+    const rval = this.styleMap.get(id);
     if (!rval) { throw new StyleIdDoesNotExistError(`Style ${id} doesn't exist.`); }
     return rval;
   }
+
+  public get numRelationships(): number { return this.relationshipMap.size; }
+
+  public get numStyles(): number { return this.styleMap.size; }
 
   public toHtml(): Html {
     return this.topLevelStyleOrder()
@@ -417,7 +419,7 @@ export class Notebook {
     // REVIEW: Ideally, relationships would be stored in a Map, not an object,
     //         so we could obtain an iterator over the values, and not have to
     //         construct an intermediate array.
-    for (const relationship of <RelationshipObject[]>Object.values(this.relationshipMap)) {
+    for (const relationship of this.relationshipMap.values()) {
       if ((options.fromId || options.toId) && relationship.fromId != options.fromId && relationship.toId != options.toId) { continue; }
       if (options.source && relationship.source != options.source) { continue; }
       if (options.role && relationship.role != options.role) { continue; }
@@ -491,9 +493,9 @@ export class Notebook {
 
   // Private Instance Properties
 
-  protected relationshipMap: RelationshipMap;
-  protected styleMap: StyleMap;     // Mapping from style ids to style objects.
-  protected styleOrder: StyleId[];  // List of style ids in the top-down order they appear in the notebook.
+  protected relationshipMap: Map<RelationshipId, RelationshipObject>;
+  protected styleMap: Map<StyleId, StyleObject>;
+  protected styleOrder: StyleId[]; // List of style ids in the top-down order they appear in the notebook.
 
   // Private Instance Property Functions
 
@@ -549,10 +551,10 @@ export class Notebook {
   }
 
   private deleteRelationship(relationship: RelationshipObject): void {
-    // TODO: relationship may have already been deleted by another observer.
-    const id = relationship.id;
-    if (!this.relationshipMap[id]) { throw new Error(`Deleting unknown relationship ${id}`); }
-    delete this.relationshipMap[id];
+    // REVIEW: Relationship may have already been deleted by another observer. May need an alternative that fails silently.
+    if (!this.relationshipMap.has(relationship.id)) { throw new Error(`Deleting unknown relationship ${relationship.id}`); }
+    this.relationshipMap.delete(relationship.id);
+    console.log("AFTER", this.numRelationships)
   }
 
   private deleteStyle(style: StyleObject): void {
@@ -562,17 +564,16 @@ export class Notebook {
       if (i<0) { throw new Error(`Deleting unknown top-level style ${style.id}`); }
       this.styleOrder.splice(i,1);
     }
-    if (!this.styleMap[style.id]) { throw new Error(`Deleting unknown style ${style.id}`); }
-    delete this.styleMap[style.id];
+    if (!this.styleMap.has(style.id)) { throw new Error(`Deleting unknown style ${style.id}`); }
+    this.styleMap.delete(style.id);
   }
 
   private insertRelationship(relationship: RelationshipObject): void {
-    this.relationshipMap[relationship.id] = relationship;
+    this.relationshipMap.set(relationship.id, relationship);
   }
 
   private insertStyle(style: StyleObject, afterId?: StyleRelativePosition): void {
-
-    this.styleMap[style.id] = style;
+    this.styleMap.set(style.id, style);
     // Insert top-level styles in the style order.
     if (!style.parentId) {
       if (!afterId || afterId===StylePosition.Top) {

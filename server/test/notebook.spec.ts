@@ -60,7 +60,7 @@ describe("notebook", function() {
     });
 
     it("Retrieves styles with allStyles and getStyle", async function() {
-      const styles = td.allStyles();
+      const styles = Array.from(td.allStyles());
       assert.equal(styles.length, 3);
       assert.equal(styles[0].data, styleData[0]);
 

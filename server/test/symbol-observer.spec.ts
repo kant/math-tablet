@@ -228,23 +228,22 @@ describe("test symbol observer", function() {
       await notebook.requestChanges('TEST', [changeRequests[1]]);
       const style = notebook.topLevelStyleOf(1);
       assert.deepEqual(style.type,'WOLFRAM');
-      assert.equal(notebook.allRelationships().length,1);
-      const r : RelationshipObject = notebook.allRelationships()[0];
+      assert.equal(notebook.numRelationships,1);
+      const r : RelationshipObject = Array.from(notebook.allRelationships())[0];
       const fromObj : StyleObject = notebook.topLevelStyleOf(r.fromId);
       const toObj : StyleObject =  notebook.topLevelStyleOf(r.toId);
       assert.equal(fromObj.data,data[0]);
       assert.equal(toObj.data,data[1]);
     });
+
     it("a definition and a use creates a relationship if combined", async function(){
       const changeRequests = [insertRequest[0],insertRequest[1]];
       await notebook.requestChanges('TEST', changeRequests);
       const style = notebook.topLevelStyleOf(1);
-      assert.deepEqual(style.type,
-                       'WOLFRAM'
-                      );
+      assert.deepEqual(style.type, 'WOLFRAM');
 
-      assert.equal(notebook.allRelationships().length,1);
-      const r : RelationshipObject = notebook.allRelationships()[0];
+      assert.equal(notebook.numRelationships,1);
+      const r : RelationshipObject = Array.from(notebook.allRelationships())[0];
       const fromObj : StyleObject = notebook.topLevelStyleOf(r.fromId);
       const toObj : StyleObject =  notebook.topLevelStyleOf(r.toId);
 
@@ -256,15 +255,14 @@ describe("test symbol observer", function() {
       const changeRequests = [insertRequest[0],insertRequest[1]];
       await notebook.requestChanges('TEST', changeRequests);
       const style = notebook.topLevelStyleOf(1);
-      assert.deepEqual(style.type,'WOLFRAM');
+      assert.equal(style.type, 'WOLFRAM');
+      assert.equal(notebook.numRelationships,1);
 
-      assert.equal(notebook.allRelationships().length,1);
-      const deleteReq : StyleDeleteRequest = { type: 'deleteStyle',
-                           styleId: style.id };
-
+      const deleteReq: StyleDeleteRequest = { type: 'deleteStyle', styleId: style.id };
       await notebook.requestChanges('TEST', [deleteReq]);
-      assert.equal(notebook.allRelationships().length,0);
+      assert.equal(notebook.numRelationships,0);
     });
+
     it("multiple definitions create inconsistencies",async function(){
       // Our goal here is to mark two defintions as inconsistent,
       // but still keep a linear chain.
@@ -275,9 +273,9 @@ describe("test symbol observer", function() {
 
       const style = notebook.topLevelStyleOf(1);
       assert.deepEqual(style.type,'WOLFRAM');
-      assert.equal(notebook.allRelationships().length,2);
+      assert.equal(notebook.numRelationships,2);
       // We want to check that the relaionship is "duplicate def".
-      const r : RelationshipObject = notebook.allRelationships()[0];
+      const r : RelationshipObject = Array.from(notebook.allRelationships())[0];
       assert.equal(r.role,'DUPLICATE-DEFINITION');
     });
     it("two defs and a use create an inconsistency and a use",async function(){
@@ -285,7 +283,7 @@ describe("test symbol observer", function() {
       await serializeChangeRequests(notebook,changeRequests);
 
 
-      assert.equal(2,notebook.allRelationships().length);
+      assert.equal(2, notebook.numRelationships);
       // We want to check that the relaionship is "duplicate def".
       const rds : RelationshipObject[] = notebook.findRelationships({ role: 'DUPLICATE-DEFINITION' });
       assert.equal(1,rds.length);
@@ -307,9 +305,9 @@ describe("test symbol observer", function() {
       await serializeChangeRequests(notebook,changeRequests);
 
       // Now that we have this, the Final one, X^2, should evaulte to 36
-      assert.equal(1,notebook.allRelationships().length);
+      assert.equal(1, notebook.numRelationships);
 
-      const rd : RelationshipObject = notebook.allRelationships()[0];
+      const rd : RelationshipObject = Array.from(notebook.allRelationships())[0];
       const fromId = rd.fromId;
 
       const cr: StyleChangeRequest = {
@@ -319,7 +317,7 @@ describe("test symbol observer", function() {
       };
       await serializeChangeRequests(notebook,[cr]);
 
-      assert.equal(1,notebook.allRelationships().length);
+      assert.equal(1, notebook.numRelationships);
 
     });
     it("An input and change does produces only one relationhsip",async function(){
@@ -331,9 +329,9 @@ describe("test symbol observer", function() {
       await serializeChangeRequests(notebook,changeRequests);
 
       // Now that we have this, the Final one, X^2, should evaulte to 36
-      assert.equal(1,notebook.allRelationships().length);
+      assert.equal(1, notebook.numRelationships);
 
-      const rd : RelationshipObject = notebook.allRelationships()[0];
+      const rd : RelationshipObject = Array.from(notebook.allRelationships())[0];
       const fromId = rd.fromId;
 
       const cr: StyleChangeRequest = {
@@ -343,7 +341,7 @@ describe("test symbol observer", function() {
       };
       await serializeChangeRequests(notebook,[cr]);
 
-      assert.equal(1,notebook.allRelationships().length);
+      assert.equal(1, notebook.numRelationships);
 
     });
 
@@ -394,9 +392,9 @@ describe("test symbol observer", function() {
       await serializeChangeRequests(notebook,changeRequests);
 
       // Now that we have this, the Final one, X^2, should evaulte to 36
-      assert.equal(1,notebook.allRelationships().length);
+      assert.equal(1, notebook.numRelationships);
 
-      const rd : RelationshipObject = notebook.allRelationships()[0];
+      const rd : RelationshipObject = Array.from(notebook.allRelationships())[0];
       const toId = rd.toId;
 
       const cr: StyleDeleteRequest = {
@@ -404,7 +402,7 @@ describe("test symbol observer", function() {
         styleId: toId,
       };
       await serializeChangeRequests(notebook,[cr]);
-      assert.equal(0,notebook.allRelationships().length);
+      assert.equal(0, notebook.numRelationships);
     });
     it("Relationships can be completely recomputed",async function(){
       const data:string[] = [
@@ -415,7 +413,7 @@ describe("test symbol observer", function() {
 
       await serializeChangeRequests(notebook,changeRequests);
       const rels = notebook.recomputeAllSymbolRelationships();
-      assert.equal(notebook.allRelationships().length,rels.length);
+      assert.equal(notebook.numRelationships,rels.length);
     });
 
     it("three defs cause the final one to be used",async function(){
@@ -429,7 +427,7 @@ describe("test symbol observer", function() {
       await serializeChangeRequests(notebook,changeRequests);
 
       // Now that we have this, the Final one, X^2, should evaulte to 36
-      assert.equal(3,notebook.allRelationships().length);
+      assert.equal(3, notebook.numRelationships);
       // Now we have want to take the last one, and observe an evaluation.
       // This raises the question: should we add an evaluation to the
       // notebook itself, which would be a bit expensive, but
@@ -448,7 +446,7 @@ describe("test symbol observer", function() {
       const texformatter = children[0];
       assert.equal('Y = 36',texformatter.data);
       const rels = notebook.recomputeAllSymbolRelationships();
-      assert.equal(notebook.allRelationships().length,rels.length);
+      assert.equal(notebook.numRelationships,rels.length);
 
     });
     it("getSymbolStylesThatDependOnMe works",async function(){
@@ -458,7 +456,7 @@ describe("test symbol observer", function() {
       const insertRequests = generateInsertRequests(data);
       await serializeChangeRequests(notebook,insertRequests);
 
-      const rs = notebook.allRelationships();
+      const rs = Array.from(notebook.allRelationships());
       assert.equal(1,rs.length);
       const defStyle = notebook.getStyle(rs[0].fromId);
       const U = notebook.getSymbolStylesThatDependOnMe(defStyle);
@@ -481,7 +479,7 @@ describe("test symbol observer", function() {
       await serializeChangeRequests(notebook,[deleteRequest]);
 
       // Now that we have this, the Final one, X^2, should evaulte to 36
-      assert.equal(1,notebook.allRelationships().length);
+      assert.equal(1, notebook.numRelationships);
       // Now we have want to take the last one, and observe an evaluation.
       // This raises the question: should we add an evaluation to the
       // notebook itself, which would be a bit expensive, but
@@ -535,7 +533,7 @@ describe("test symbol observer", function() {
 
         assert.equal('Y = '+(i+2)*(i+2),lasttex);
         const rels = notebook.recomputeAllSymbolRelationships();
-        assert.equal(notebook.allRelationships().length,rels.length);
+        assert.equal(notebook.numRelationships,rels.length);
       }
 
       // Now we must delete objects!!!
@@ -560,7 +558,7 @@ describe("test symbol observer", function() {
                                                  afterId: 0
                                                };
       await serializeChangeRequests(notebook,[moveRequest]);
-      const rel_r =  notebook.allRelationships();
+      const rel_r =  Array.from(notebook.allRelationships());
       const rel_recomp = notebook.recomputeAllSymbolRelationships();
 
       assert.equal(rel_r.length,
@@ -588,7 +586,7 @@ describe("test symbol observer", function() {
                                                  afterId: 0
                                                };
       await serializeChangeRequests(notebook,[moveRequest]);
-      const rel_r =  notebook.allRelationships();
+      const rel_r =  Array.from(notebook.allRelationships());
       const rel_recomp = notebook.recomputeAllSymbolRelationships();
 
       assert.equal(rel_r.length,

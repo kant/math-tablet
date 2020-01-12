@@ -141,7 +141,8 @@ export class MathematicaObserver implements ObserverInstance {
 
       const parentThought =  this.notebook.topLevelStyleOf(style.id);
 
-      const expressions = this.notebook.allStyles().filter(
+      // REVIEW: Don't instantiate into array.
+      const expressions = Array.from(this.notebook.allStyles()).filter(
         (s: StyleObject, _index: number, _array: StyleObject[]) => {
           const anc = this.notebook.topLevelStyleOf(s.id);
           if (anc == parentThought) return false;

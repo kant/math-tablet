@@ -132,7 +132,7 @@ export class SymbolClassifierObserver implements ObserverInstance {
         // not this is nullable, and is a Relationship.
         var duplicateof : RelationshipObject | undefined;
         const rs = this.notebook.allRelationships();
-        rs.forEach(r => {
+        for (const r of rs) {
           if ((r.toId == did) && r.role == 'DUPLICATE-DEFINITION') {
             if (duplicateof != null) {
               debug("INTERNAL ERROR: Linearity of defintions broken1!");
@@ -140,7 +140,7 @@ export class SymbolClassifierObserver implements ObserverInstance {
             }
             duplicateof = r;
           }
-        });
+        };
 
         const U = this.notebook.getSymbolStylesThatDependOnMe(style);
         const users : number[] = [];
@@ -178,7 +178,7 @@ export class SymbolClassifierObserver implements ObserverInstance {
         // note this is nullable, and is a Relationship.
         var singleuseof : RelationshipObject | undefined;
         const rs = this.notebook.allRelationships();
-        rs.forEach(r => {
+        for (const r of rs) {
           if ((r.toId == did)) {
             if (singleuseof != null) {
               debug("INTERNAL ERROR: Linearity of defintions broken1!");
@@ -186,7 +186,7 @@ export class SymbolClassifierObserver implements ObserverInstance {
             }
             singleuseof = r;
           }
-        });
+        };
         if (singleuseof)
           rval.push({ type: 'deleteRelationship',
                       id: singleuseof.id });
@@ -356,28 +356,28 @@ export class SymbolClassifierObserver implements ObserverInstance {
 
       // that mention them...
       const rs = this.notebook.allRelationships();
-      symbols.forEach(name => {
-        rs.forEach(r => {
-        const fromS = this.notebook.getStyle(r.fromId);
-        const toS = this.notebook.getStyle(r.toId);
-        if (fromS.type == 'SYMBOL' &&
-            (fromS.role == 'SYMBOL-USE' ||
-             fromS.role == 'SYMBOL-DEFINITION'
-            ) &&
-            fromS.data.name == name) {
-          rval.push({ type: 'deleteRelationship',
-                      id: r.id });
-        }
-        if (toS.type == 'SYMBOL' &&
-            (toS.role == 'SYMBOL-USE' ||
-             toS.role == 'SYMBOL-DEFINITION'
-            ) &&
-            toS.data.name == name) {
-          rval.push({ type: 'deleteRelationship',
-                      id: r.id });
-        }
-        });
-      });
+      for (const name of symbols) {
+        for (const r of rs) {
+          const fromS = this.notebook.getStyle(r.fromId);
+          const toS = this.notebook.getStyle(r.toId);
+          if (fromS.type == 'SYMBOL' &&
+              (fromS.role == 'SYMBOL-USE' ||
+              fromS.role == 'SYMBOL-DEFINITION'
+              ) &&
+              fromS.data.name == name) {
+            rval.push({ type: 'deleteRelationship',
+                        id: r.id });
+          }
+          if (toS.type == 'SYMBOL' &&
+              (toS.role == 'SYMBOL-USE' ||
+              toS.role == 'SYMBOL-DEFINITION'
+              ) &&
+              toS.data.name == name) {
+            rval.push({ type: 'deleteRelationship',
+                        id: r.id });
+          }
+        };
+      };
 
       const rels : RelationshipObject[] =
         this.notebook.recomputeAllSymbolRelationshipsForSymbols(symbols);
@@ -621,7 +621,7 @@ export class SymbolClassifierObserver implements ObserverInstance {
     // order at some point, and this basic approach with then become
     // reusable.  In fact, I cold implment a "sort" now and use it
     // to compute the "lates" but that is a tad wastefule. - rlr
-    const [max,maxstyle] = this.notebook.allStyles().reduce(
+    const [max,maxstyle] = Array.from(this.notebook.allStyles()).reduce(
       (acc,val) => {
         if (val.type == 'SYMBOL' &&
           val.role == useOrDef &&
