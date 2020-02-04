@@ -355,4 +355,41 @@ export class AlgebraicToolsObserver implements ObserverInstance {
   // }
 }
 
+// Exported Class
+
+export class AlgebraicToolsObserver2 extends BaseObserver {
+
+  // --- OVERRIDES ---
+
+  protected get rules(): Rules { return AlgebraicToolsObserver2.RULES; }
+
+  // --- PUBLIC ---
+
+  public static async onOpen(notebook: ServerNotebook): Promise<AlgebraicToolsObserver2> {
+    debug(`Opening AlgebraicToolsObserver2 for ${notebook._path}.`);
+    return new this(notebook);
+  }
+
+  // --- PRIVATE ---
+
+  // Private Class Constants
+
+  private static RULES: Rules = [
+    {
+      name: "update-transformation",
+      peerStyleTest: { role: 'REPRESENTATION', type: 'LATEX', notSource: 'WOLFRAM' },
+      props: { role: 'REPRESENTATION', subrole: 'ALTERNATE', type: 'WOLFRAM' },
+      computeAsync: AlgebraicToolsObserver2.ruleUpdateTransformation,
+    },
+  ];
+
+  // Private Class Methods
+
+  private static async ruleUpdateTransformation(data: WolframData): Promise<WolframData|undefined> {
+    console.log(`ruleUpdateTransformation: ${JSON.stringify(data)}`);
+    return undefined; // BUGBUG
+  }
+
+}
+
 // Helper Functions

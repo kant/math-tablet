@@ -295,7 +295,8 @@ export const STYLE_SOURCES = [
   'MYSCRIPT',         // MyScript handwriting recognition`
   'SANDBOX',          // Sandbox for temporary experiments
   'SUBTRIV-CLASSIFIER',
-  'ALGEBRAIC-TOOLS',  // Algebraic tools provided by Wolfram
+  'ALGEBRAIC-TOOLS',  // Algebraic tools provided by Wolfram (Low-Level)
+  'ALGEBRAIC-TOOLS2', // Algebraic tools provided by Wolfram (High-Level)
   'EQUATION-SOLVER',  // Attempt to expose Wolfram solutions
   'SVG',              // SVG observer
   'SYMBOL-CLASSIFIER',
