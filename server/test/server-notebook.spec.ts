@@ -96,13 +96,13 @@ describe("server notebook", function() {
       const callCountAsync = onChangesAsyncSpy.callCount;
       const callCountSync = onChangesSyncSpy.callCount;
       const styleProps: StylePropertiesWithSubprops = { role: 'FORMULA', type: 'FORMULA', data: undefined };
-      const insertRequest: StyleInsertRequest = { type: 'insertStyle', styleProps };
+      const insertRequest: StyleInsertRequest = { action: 'insertStyle', styleProps };
       const changeRequests = [insertRequest];
       await notebook.requestChanges('TEST', changeRequests);
       assert.equal(onChangesAsyncSpy.callCount, callCountAsync + 1);
       assert.equal(onChangesSyncSpy.callCount, callCountSync + 1);
       const expectedNotebookChange: StyleInserted = {
-        type: 'styleInserted',
+        action: 'styleInserted',
         style: {
           id: 1,
           parentId: 0,
@@ -127,7 +127,7 @@ describe("server notebook", function() {
           { type: 'TOOL', role: 'ATTRIBUTE', data: toolInfo },
         ]
       };
-      const insertRequest: StyleInsertRequest = { type: 'insertStyle', styleProps };
+      const insertRequest: StyleInsertRequest = { action: 'insertStyle', styleProps };
       await notebook.requestChanges('TEST', [insertRequest]);
 
       // Observer's onChange should be called with two new styles.
@@ -136,8 +136,8 @@ describe("server notebook", function() {
       const changesSync: NotebookChange[] = onChangesSyncSpy.lastCall.args[0];
       assert.equal(changesAsync.length, 2);
       assert.equal(changesSync.length, 2);
-      const toolChangeAsync = changesAsync.find(c=> c && c.type=='styleInserted' && c.style.type=='TOOL');
-      const toolChangeSync = changesSync.find(c=> c && c.type=='styleInserted' && c.style.type=='TOOL');
+      const toolChangeAsync = changesAsync.find(c=> c && c.action=='styleInserted' && c.style.type=='TOOL');
+      const toolChangeSync = changesSync.find(c=> c && c.action=='styleInserted' && c.style.type=='TOOL');
       assert.exists(toolChangeAsync);
       assert.exists(toolChangeSync);
       const toolStyle = (<StyleInserted>toolChangeAsync).style;

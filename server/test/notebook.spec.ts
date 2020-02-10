@@ -79,7 +79,7 @@ async function createNotebookFromText(type: StyleType, text: string): Promise<Se
   const changeRequests: NotebookChangeRequest[] = text.split(";").map(s=>{
     const data = s.trim();
     const styleProps: StylePropertiesWithSubprops = { role: 'TEXT', type, data };
-    const rval: StyleInsertRequest = { type: 'insertStyle', styleProps }
+    const rval: StyleInsertRequest = { action: 'insertStyle', styleProps }
     return rval;
   });
   await td.requestChanges('TEST', changeRequests);

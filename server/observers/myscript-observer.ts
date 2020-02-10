@@ -165,7 +165,7 @@ export class MyScriptObserver implements ObserverInstance {
   }
 
   private onChangeAsync(change: NotebookChange): void {
-    // debug(`onChangeAsync ${this.notebook._path} ${change.type}`);
+    // debug(`onChangeAsync ${this.notebook._path} ${change.action}`);
     switch (change.type) {
       case 'styleChanged':  this.chStyleChanged(change); break;
       //case 'styleDeleted':  this.chStyleDeleted(change); break;
@@ -175,8 +175,8 @@ export class MyScriptObserver implements ObserverInstance {
   }
 
   // private onChangeSync(change: NotebookChange, rval: NotebookChangeRequest[]): void {
-  //   // debug(`onChangeSync ${this.notebook._path} ${change.type}`);
-  //   switch (change.type) {
+  //   // debug(`onChangeSync ${this.notebook._path} ${change.action}`);
+  //   switch (change.action) {
   //     case 'styleChanged':  this.chStyleChanged(change); break;
   //     //case 'styleDeleted':  this.chStyleDeleted(change); break;
   //     //case 'styleInserted': this.chStyleInserted(change); break;

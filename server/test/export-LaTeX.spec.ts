@@ -60,7 +60,7 @@ function generateInsertRequests(inputs :string[]) : StyleInsertRequest[] {
   var reqs : StyleInsertRequest[] = [];
   for(const i of inputs) {
     reqs.push({
-      type: 'insertStyle',
+      action: 'insertStyle',
       styleProps: {
         role: 'FORMULA',
         type: 'FORMULA',

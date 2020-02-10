@@ -169,24 +169,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   color red
   font-size x-small
 
-.keyboardInputErrorMessage
-  color red
-  font-size x-small
-  min-height 20px
-  padding 2px
-
 .keyboardInputPanel
   outline 1px solid blue
 
-.keyboardInputPanel>textArea
-  display block
-  height 1in
-  padding 8px
-  width calc(100% - 8px)
+  .inputRow
+    align-items center
+    display flex
 
-.keyboardInputPreview
-  min-height 60px
-  padding 8px
+  .messages
+    color red
+    font-size x-small
+    min-height 20px
+    padding 2px
+
+  .preview
+    min-height 60px
+    padding 8px
+
+  .selectors
+    padding 0 12px 0 8px
+
+  select
+    display block
+    width 92px
+
+  textArea
+    display block
+    height 1in
+    padding 8px
+    width calc(100% - 8px)
+
 
 .page
   background-color white

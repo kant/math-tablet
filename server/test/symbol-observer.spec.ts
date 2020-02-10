@@ -69,7 +69,7 @@ async function serializeChangeRequests(notebook: ServerNotebook,
 function generateInsertRequests(inputs :string[]) : StyleInsertRequest[] {
   var reqs : StyleInsertRequest[] = [];
   for(const i of inputs) {
-    reqs.push( { type: 'insertStyle',
+    reqs.push( { action: 'insertStyle',
             styleProps: { role: 'REPRESENTATION', type: 'WOLFRAM', data: i } }
         );
   }
@@ -194,7 +194,7 @@ describe("test symbol observer", function() {
         exclusiveChildTypeAndRole: true,
       }
       const cr1: StyleInsertRequest = {
-        type: 'insertStyle',
+        action: 'insertStyle',
         parentId: style.id,
         styleProps: styleProps1,
       };
@@ -206,7 +206,7 @@ describe("test symbol observer", function() {
         exclusiveChildTypeAndRole: true,
       }
       const cr2: StyleInsertRequest = {
-        type: 'insertStyle',
+        action: 'insertStyle',
         parentId: style.id,
         styleProps: styleProps2,
       };
@@ -259,7 +259,7 @@ describe("test symbol observer", function() {
       assert.deepEqual(style.type,'WOLFRAM');
 
       assert.equal(notebook.allRelationships().length,1);
-      const deleteReq : StyleDeleteRequest = { type: 'deleteStyle',
+      const deleteReq : StyleDeleteRequest = { action: 'deleteStyle',
                            styleId: style.id };
 
       await notebook.requestChanges('TEST', [deleteReq]);
@@ -313,7 +313,7 @@ describe("test symbol observer", function() {
       const fromId = rd.fromId;
 
       const cr: StyleChangeRequest = {
-        type: 'changeStyle',
+        action: 'changeStyle',
         styleId: fromId,
         data: "X = 5",
       };
@@ -337,7 +337,7 @@ describe("test symbol observer", function() {
       const fromId = rd.fromId;
 
       const cr: StyleChangeRequest = {
-        type: 'changeStyle',
+        action: 'changeStyle',
         styleId: fromId,
         data: "X = 5",
       };
@@ -377,7 +377,7 @@ describe("test symbol observer", function() {
       const toId = rd.toId;
 
       const cr: StyleDeleteRequest = {
-        type: 'deleteStyle',
+        action: 'deleteStyle',
         styleId: toId,
       };
       await serializeChangeRequests(notebook,[cr]);
@@ -452,7 +452,7 @@ describe("test symbol observer", function() {
       await serializeChangeRequests(notebook,insertRequests);
 
       const secondThoughtId = notebook.topLevelStyleOrder()[1];
-      const deleteRequest : StyleDeleteRequest = { type: 'deleteStyle',
+      const deleteRequest : StyleDeleteRequest = { action: 'deleteStyle',
                               styleId: secondThoughtId };
 
       await serializeChangeRequests(notebook,[deleteRequest]);
@@ -493,7 +493,7 @@ describe("test symbol observer", function() {
       for(var i = NUM-1; i > 1; i--) {
 
         let penultimate = getThought(notebook,-2);
-        const deleteRequest : StyleDeleteRequest = { type: 'deleteStyle',
+        const deleteRequest : StyleDeleteRequest = { action: 'deleteStyle',
                                                      styleId: penultimate };
 
         await serializeChangeRequests(notebook,[deleteRequest]);
@@ -532,7 +532,7 @@ describe("test symbol observer", function() {
 
 
      let penultimate = getThought(notebook,-2);
-      const moveRequest : StyleMoveRequest = { type: 'moveStyle',
+      const moveRequest : StyleMoveRequest = { action: 'moveStyle',
                                                  styleId: penultimate,
                                                  afterId: 0
                                                };
@@ -560,7 +560,7 @@ describe("test symbol observer", function() {
 
 
       let penultimate = getThought(notebook,2);
-      const moveRequest : StyleMoveRequest = { type: 'moveStyle',
+      const moveRequest : StyleMoveRequest = { action: 'moveStyle',
                                                  styleId: penultimate,
                                                  afterId: 0
                                                };
@@ -592,7 +592,7 @@ describe("test symbol observer", function() {
       const initialId = 1;
 
       const cr: StyleChangeRequest = {
-        type: 'changeStyle',
+        action: 'changeStyle',
         styleId: initialId,
         data: data1[0],
       };
@@ -616,7 +616,7 @@ describe("test symbol observer", function() {
       const initialId = 1;
 
       const cr: StyleChangeRequest = {
-        type: 'changeStyle',
+        action: 'changeStyle',
         styleId: initialId,
         data: data1[0],
       };
@@ -642,14 +642,14 @@ describe("test symbol observer", function() {
       const initialId = 1;
 
       const cr0: StyleChangeRequest = {
-        type: 'changeStyle',
+        action: 'changeStyle',
         styleId: initialId,
         data: data[2],
       };
       await serializeChangeRequests(notebook,[cr0]);
 
       const cr1: StyleChangeRequest = {
-        type: 'changeStyle',
+        action: 'changeStyle',
         styleId: initialId,
         data: data[3],
       };

@@ -87,8 +87,8 @@ export class AnyInputObserver implements ObserverInstance {
   private onChange(change: NotebookChange|undefined, rval: NotebookChangeRequest[]): void {
     // REVIEW; Don't allow null/undefined changes.
     if (!change) { return; }
-    debug(`onChange ${this.notebook._path} ${change.type}`);
-    switch (change.type) {
+    debug(`onChange ${this.notebook._path} ${change.action}`);
+    switch (change.action) {
       case 'styleMoved': this.chStyleMoved(change, rval); break;
       default: break;
     }
@@ -117,7 +117,7 @@ export class AnyInputObserver implements ObserverInstance {
       children.forEach(
         k => {
             const changeReq: StyleMoveRequest = {
-              type: 'moveStyle',
+              action: 'moveStyle',
               styleId: k.id,
               afterId: change.afterId
             }
