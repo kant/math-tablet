@@ -615,12 +615,15 @@ export class ServerNotebook extends Notebook {
             // console.error("fromId for i",fromId,us[i]);
             // Since we are not at present injecting into the notebook,
             // the id will remain -1.
+            const toId = us[i].sid;
             var r : RelationshipObject = {
               source: 'TEST',
               id: -1,
-              fromId: fromId,
-              toId: us[i].sid,
+              fromId,
+              toId,
               role: 'SYMBOL-DEPENDENCY',
+              inStyles: [ { role: 'LEGACY', id: fromId } ],
+              outStyles: [ { role: 'LEGACY', id: toId } ],
             };
             rs.push(r);
           } else {
@@ -645,13 +648,16 @@ export class ServerNotebook extends Notebook {
         // Since we are not at present injecting into the notebook,
         // the id will remain -1.
         if (fromId) {
+          const toId = ds[i].sid;
           var r : RelationshipObject = {
             source: 'TEST',
             id: -1,
-            fromId: fromId,
-            toId: ds[i].sid,
+            fromId,
+            toId,
             role: 'DUPLICATE-DEFINITION',
-          };
+            inStyles: [ { role: 'LEGACY', id: fromId } ],
+            outStyles: [ { role: 'LEGACY', id: toId } ],
+        };
           rs.push(r);
         }
       }
@@ -843,6 +849,8 @@ export class ServerNotebook extends Notebook {
       source,
       fromId: request.fromId,
       toId: request.toId,
+      inStyles: [ { role: 'LEGACY', id: request.fromId } ],
+      outStyles: [ { role: 'LEGACY', id: request.toId } ],
       ...request.props,
     };
     const change: RelationshipInserted = { type: 'relationshipInserted', relationship };
