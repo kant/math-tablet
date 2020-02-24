@@ -86,6 +86,7 @@ export class AlgebraicToolsObserver implements ObserverInstance {
 
     const fromId = this.notebook.topLevelStyleOf(toolInfo.origin_id!).id;
     const toId = this.notebook.reserveId();
+    const hintId = this.notebook.reserveId();
     const relId = this.notebook.reserveId();
 
     const data: HintData = {
@@ -96,6 +97,7 @@ export class AlgebraicToolsObserver implements ObserverInstance {
 
     const hintProps: StylePropertiesWithSubprops = {
       role: 'HINT', type: 'HINT-DATA', data,
+      id: hintId,
       subprops: [
         { role: 'REPRESENTATION', subrole: 'INPUT', type: 'TEXT', data: `From ${toolInfo.name}` },
       ]
@@ -162,9 +164,17 @@ export class AlgebraicToolsObserver implements ObserverInstance {
       { type: 'insertRelationship',
         fromId,
         toId,
-        inStyles: [ { role: 'LEGACY', id: fromId } ],
-        outStyles: [ { role: 'LEGACY', id: toId } ],
+        inStyles: [ { role: 'LEGACY', id: fromId },
+                    { role: 'INPUT-FORMULA', id: fromId},
+                    { role: 'TRANSFORMATION-TOOL', id: toolStyle.id}
+                  ],
+        outStyles: [ { role: 'LEGACY', id: toId },
+                     { role: 'OUTPUT-FORMULA', id: toId},
+                     { role: 'TRANSFORMATION-HINT', id: hintId}
+],
         props: relProps };
+
+    debug("relReq ===================",relReq);
 
     return [ hintReq, changeReq, relReq ];
   }
@@ -312,6 +322,9 @@ export class AlgebraicToolsObserver implements ObserverInstance {
                          (s : string) => `\\text{Apart: } ${s}`);
   }
 
+
+  // Note: as of 02/24 with the introduction of N-Ary relationships,
+  // this is now logically obsolete.
   private async algebraicToolsStyleChangeRule(style: StyleObject, rval: NotebookChangeRequest[]): Promise<void> {
     debug("cccc",style);
     this.removeAllOffspringOfType(style,rval,'TOOL');
@@ -352,13 +365,33 @@ export class AlgebraicToolsObserver implements ObserverInstance {
             logic: HintRelationship.Equivalent,
             status: HintStatus.Unknown,
           };
+// Now we find the HINT
+        const hintStyle =
+          this.notebook.findStyles({ type: 'HINT-DATA',
+                                    role: 'HINT',
+                                    recursive: true,
+                                   }).find(s =>
+                                           s.data.idOfRelationshipDecorated == r.id );
+        const hintId = hintStyle!.id;
+
+        // now we will use the old tool id from the
+        // last relationship, until we can mke the change
+        // one that does not destroy relationships and recreate them.
+        const toolId = r.inStyles!.find( p =>
+                                             (p.role == 'TRANSFORMATION-TOOL'))!.id;
 
         const relReq: RelationshipInsertRequest =
           { type: 'insertRelationship',
             fromId: r.fromId,
             toId: toId,
-            inStyles: [ { role: 'LEGACY', id: r.fromId } ],
-            outStyles: [ { role: 'LEGACY', id: toId } ],
+            inStyles: [ { role: 'LEGACY', id: r.fromId },
+                        { role: 'INPUT-FORMULA', id: r.fromId},
+                        { role: 'TRANSFORMATION-TOOL', id: toolId}
+                      ],
+            outStyles: [ { role: 'LEGACY', id: toId },
+                         { role: 'OUTPUT-FORMULA', id: toId},
+                         { role: 'TRANSFORMATION-HINT', id: hintId}
+                       ],
             props: relProps };
         rval.push(relReq);
 
@@ -368,13 +401,6 @@ export class AlgebraicToolsObserver implements ObserverInstance {
         };
         rval.push(deleteReq);
 
-// Now we find the HINT
-        const hintStyle =
-          this.notebook.findStyles({ type: 'HINT-DATA',
-                                    role: 'HINT',
-                                    recursive: true,
-                                   }).find(s =>
-                                           s.data.idOfRelationshipDecorated == r.id );
         if (hintStyle) {
 
         const data: HintData = {
