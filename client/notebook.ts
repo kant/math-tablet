@@ -159,9 +159,10 @@ export type RelationshipId = number;
 export interface RelationshipObject extends RelationshipProperties {
   id: RelationshipId;
   source: StyleSource;
-  /* ELIMINATE */ fromId: StyleId;
-  /* ELIMINATE */ toId: StyleId;
-  /* ADD */ // styles: RelationshipStyle[];
+  /* TODO: Legacy. Eliminate. */ fromId: StyleId;
+  /* TODO: Legacy. Eliminate. */ toId: StyleId;
+  inStyles: RelationshipStyle[];
+  outStyles: RelationshipStyle[];
 }
 
 export type RelationshipRole =
@@ -186,12 +187,10 @@ export interface RelationshipProperties {
 export interface RelationshipStyle {
   role: RelationshipStyleRole;
   id: StyleId;
-  input: boolean;
 }
 
 export type RelationshipStyleRole =
-  'FROM' |      // Legacy compatibility
-  'TO' |        // Legacy compatibility
+  'LEGACY' |      // Legacy compatibility
   'INPUT-FORMULA' |
   'OUTPUT-FORMULA' |
   'TRANSFORMATION-TOOL' |
