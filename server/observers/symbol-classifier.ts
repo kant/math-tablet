@@ -493,12 +493,16 @@ export class SymbolClassifierObserver implements ObserverInstance {
           const last_def = this.getLatestOfListOfStyleIds(defs);
 
           if (last_def < style.id) {
-            // @ts-ignore
-            const changeReq: RelationshipInsertRequest =
-              { type: 'insertRelationship',
-                fromId: last_def,
-                toId: style.id,
-                props: dup_prop };
+            const fromId = last_def;
+            const toId = style.id;
+            const changeReq: RelationshipInsertRequest = {
+              type: 'insertRelationship',
+              fromId,
+              toId,
+              inStyles: [ { role: 'LEGACY', id: fromId } ],
+              outStyles: [ { role: 'LEGACY', id: toId } ],
+                props: dup_prop
+            };
             debug('QQQQQQ');
             rval.push(
               changeReq

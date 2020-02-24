@@ -71,10 +71,8 @@ export interface FindStyleOptions {
 }
 
 export interface HintData {
-//  fromId: StyleId,
   relationship: HintRelationship,
   status: HintStatus,
-  //  toId: StyleId,
   idOfRelationshipDecorated? : RelationshipId;
 }
 
@@ -393,7 +391,7 @@ export class Notebook {
   }
 
   public relationshipsOf(id: StyleId): RelationshipObject[] {
-    return this.allRelationships().filter(r=>(r.fromId == id || r.toId == id));
+    return this.allRelationships().filter(r=>r.inStyles.find(rs=>rs.id == id) || r.outStyles.find(rs=>rs.id == id));
   }
 
   // REVIEW: Return an iterator?
@@ -500,15 +498,15 @@ export class Notebook {
     for (const change of changes) { this.applyChange(change); }
   }
 
+  // TODO: Find relationships with styles of certain relationship roles.
   public findRelationships(options: FindRelationshipOptions): RelationshipObject[] {
     const rval: RelationshipObject[] = [];
     // REVIEW: Ideally, relationships would be stored in a Map, not an object,
     //         so we could obtain an iterator over the values, and not have to
     //         construct an intermediate array.
     for (const relationship of <RelationshipObject[]>Object.values(this.relationshipMap)) {
-      //      if ((options.fromId || options.toId) && relationship.fromId != options.fromId && relationship.toId != options.toId) { continue; }
-      if ((options.fromId) && relationship.fromId != options.fromId) { continue; }
-      if ((options.toId) && relationship.toId != options.toId) { continue; }
+      if ((options.fromId) && !relationship.inStyles.find(rs=>rs.id==options.fromId)) { continue; }
+      if ((options.toId) && !relationship.outStyles.find(rs=>rs.id==options.toId)) { continue; }
       if (options.source && relationship.source != options.source) { continue; }
       if (options.role && relationship.role != options.role) { continue; }
       rval.push(relationship);
