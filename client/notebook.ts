@@ -593,7 +593,7 @@ export class Notebook {
     const status = relationship.status;
     const inStylesHtml = relationship.inStyles.map(rs=>`${rs.role} ${rs.id}`).join(", ");
     const outStylesHtml = relationship.outStyles.map(rs=>`${rs.role} ${rs.id}`).join(", ");
-    return `<div><span class="leaf">R${relationship.id} ${inStylesHtml} &#x27a1; ${outStylesHtml} (From ${relationship.fromId} to ${relationship.toId}) ${relationship.role} ${dataJson} logic: ${logic} status: ${status}</span></div>`;
+    return `<div><span class="leaf">R${relationship.id} ${relationship.role} [${inStylesHtml} &#x27a1; ${outStylesHtml}] (${relationship.fromId} &#x27a1; ${relationship.toId}) ${dataJson} logic: ${logic} status: ${status}</span></div>`;
   }
 
   private styleToHtml(style: StyleObject): Html {
