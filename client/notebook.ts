@@ -591,7 +591,9 @@ export class Notebook {
     const dataJson = (typeof relationship.data != 'undefined' ? escapeHtml(JSON.stringify(relationship.data)) : 'undefined' );
     const logic = relationship.logic;
     const status = relationship.status;
-    return `<div><span class="leaf">R${relationship.id} ${relationship.fromId} &#x27a1; ${relationship.toId} ${relationship.role} ${dataJson} logic: ${logic} status: ${status}</span></div>`;
+    const inStylesHtml = relationship.inStyles.map(rs=>`${rs.role} ${rs.id}`).join(", ");
+    const outStylesHtml = relationship.outStyles.map(rs=>`${rs.role} ${rs.id}`).join(", ");
+    return `<div><span class="leaf">R${relationship.id} ${inStylesHtml} &#x27a1; ${outStylesHtml} (From ${relationship.fromId} to ${relationship.toId}) ${relationship.role} ${dataJson} logic: ${logic} status: ${status}</span></div>`;
   }
 
   private styleToHtml(style: StyleObject): Html {
