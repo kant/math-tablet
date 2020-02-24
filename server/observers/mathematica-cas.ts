@@ -199,6 +199,8 @@ export class MathematicaObserver implements ObserverInstance {
               type: 'insertRelationship',
               fromId: src.id,
               toId: tar.id,
+              inStyles: [ { role: 'LEGACY', id: src.id } ],
+              outStyles: [ { role: 'LEGACY', id: tar.id } ],
               props,
             }
             rval.push(cr);

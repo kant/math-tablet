@@ -427,21 +427,14 @@ export class ServerNotebook extends Notebook {
     const rs = this.allRelationships();
     var symbolStyles: StyleObject[] = [];
     const mp = this.topLevelStyleOf(style.id);
-    // TODO: Remove this check. topLevelStyleOf will throw error if style not found.
-    if (!mp) {
-      throw new Error(`INTERNAL ERROR: did not produce ancenstor: ${style.id}`);
-    }
     rs.forEach(r => {
-      try {  // TODO: I don't know why this can be an error....
+      try {
+        // TODO: I don't know why this can be an error....
         // doing a catch here seems to make it work but this is a concurrency
         // problem, one way or another...we should not have relationship
         // that is not pointing to something, though of course concurrent
         // operation makes this difficult.
         const rp = this.topLevelStyleOf(r.toId);
-        // TODO: Remove this check. topLevelStyleOf will throw error if style not found.
-        if (!rp) {
-          throw new Error(`INTERNAL ERROR: did not produce ancenstor: ${style.id}`);
-        }
         if (rp.id == mp.id) {
           // We are a user of this definition...
           try {
@@ -822,6 +815,8 @@ export class ServerNotebook extends Notebook {
       type: 'insertRelationship',
       fromId: relationship.fromId,
       toId: relationship.toId,
+      inStyles: [ { role: 'LEGACY', id: relationship.fromId } ],
+      outStyles: [ { role: 'LEGACY', id: relationship.toId } ],
       props: { role: relationship.role },
     }
     return undoChangeRequest;
@@ -849,8 +844,8 @@ export class ServerNotebook extends Notebook {
       source,
       fromId: request.fromId,
       toId: request.toId,
-      inStyles: [ { role: 'LEGACY', id: request.fromId } ],
-      outStyles: [ { role: 'LEGACY', id: request.toId } ],
+      inStyles: request.inStyles,   // REVIEW: Make a copy of the array?
+      outStyles: request.outStyles, // REVIEW: Make a copy of the array?
       ...request.props,
     };
     const change: RelationshipInserted = { type: 'relationshipInserted', relationship };
@@ -1005,14 +1000,32 @@ export class ServerNotebook extends Notebook {
 
     if (styleProps.relationsFrom) {
       for (const [idStr, props] of Object.entries(styleProps.relationsFrom)) {
-        const request2: RelationshipInsertRequest = { type: 'insertRelationship', fromId: parseInt(idStr, 10), toId: style.id, props };
+        const fromId = parseInt(idStr, 10);
+        const toId = style.id;
+        const request2: RelationshipInsertRequest = {
+          type: 'insertRelationship',
+          fromId,
+          toId,
+          inStyles: [ { role: 'LEGACY', id: fromId } ],
+          outStyles: [ { role: 'LEGACY', id: toId } ],
+          props
+        };
         this.applyRelationshipInsertRequest(source, request2, rval);
       }
     }
 
     if (styleProps.relationsTo) {
       for (const [idStr, props] of Object.entries(styleProps.relationsTo)) {
-        const request2: RelationshipInsertRequest = { type: 'insertRelationship', fromId: style.id, toId: parseInt(idStr, 10), props };
+        const fromId = style.id;
+        const toId = parseInt(idStr, 10);
+        const request2: RelationshipInsertRequest = {
+          type: 'insertRelationship',
+          fromId,
+          toId ,
+          inStyles: [ { role: 'LEGACY', id: fromId } ],
+          outStyles: [ { role: 'LEGACY', id: toId } ],
+          props
+        };
         this.applyRelationshipInsertRequest(source, request2, rval);
       }
     }

@@ -190,7 +190,7 @@ export interface RelationshipStyle {
 }
 
 export type RelationshipStyleRole =
-  'LEGACY' |      // Legacy compatibility
+  'LEGACY' |      // Legacy compatibility. TODO: remove
   'INPUT-FORMULA' |
   'OUTPUT-FORMULA' |
   'TRANSFORMATION-TOOL' |

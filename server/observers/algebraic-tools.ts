@@ -160,8 +160,10 @@ export class AlgebraicToolsObserver implements ObserverInstance {
 
     const relReq: RelationshipInsertRequest =
       { type: 'insertRelationship',
-        fromId: fromId,
-        toId: toId,
+        fromId,
+        toId,
+        inStyles: [ { role: 'LEGACY', id: fromId } ],
+        outStyles: [ { role: 'LEGACY', id: toId } ],
         props: relProps };
 
     return [ hintReq, changeReq, relReq ];
@@ -355,6 +357,8 @@ export class AlgebraicToolsObserver implements ObserverInstance {
           { type: 'insertRelationship',
             fromId: r.fromId,
             toId: toId,
+            inStyles: [ { role: 'LEGACY', id: r.fromId } ],
+            outStyles: [ { role: 'LEGACY', id: toId } ],
             props: relProps };
         rval.push(relReq);
 

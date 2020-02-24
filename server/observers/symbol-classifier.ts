@@ -145,8 +145,10 @@ export class SymbolClassifierObserver implements ObserverInstance {
 
     const relReq : RelationshipInsertRequest =
       { type: 'insertRelationship',
-        fromId: fromId,
-        toId: toId,
+        fromId,
+        toId,
+        inStyles: [ { role: 'LEGACY', id: fromId } ],
+        outStyles: [ { role: 'LEGACY', id: toId } ],
         props: props
       };
 
@@ -251,11 +253,16 @@ export class SymbolClassifierObserver implements ObserverInstance {
           rids.add(duplicateof.id);
           for(const u of users) {
             const props : RelationshipProperties = { role: 'SYMBOL-DEPENDENCY' };
-            rval.push({ type: 'insertRelationship',
-                        fromId: duplicateof.fromId,
-                        toId: u,
-                        props: props,
-                      });
+            const fromId = duplicateof.fromId;
+            const toId = u;
+            rval.push({
+              type: 'insertRelationship',
+              fromId,
+              toId,
+              inStyles: [ { role: 'LEGACY', id: fromId } ],
+              outStyles: [ { role: 'LEGACY', id: toId } ],
+              props: props,
+            });
           }
         }
         rids.forEach(id => rval.push({ type: 'deleteRelationship',
@@ -449,11 +456,14 @@ export class SymbolClassifierObserver implements ObserverInstance {
           // Check that the notebook already had this relationship,
           const props : RelationshipProperties = { role: 'SYMBOL-DEPENDENCY'
                                                  };
-          const changeReq: RelationshipInsertRequest =
-            { type: 'insertRelationship',
-              fromId: myFromId,
-              toId: myToId,
-              props: props };
+          const changeReq: RelationshipInsertRequest = {
+            type: 'insertRelationship',
+            fromId: myFromId,
+            toId: myToId,
+            inStyles: [ { role: 'LEGACY', id: myFromId } ],
+            outStyles: [ { role: 'LEGACY', id: myToId } ],
+            props: props
+          };
           debug(changeReq);
           rval.push(
             changeReq
@@ -549,11 +559,14 @@ export class SymbolClassifierObserver implements ObserverInstance {
       rels.forEach(r => {
           const prop : RelationshipProperties =
             { role: r.role };
-            const changeReq: RelationshipInsertRequest =
-              { type: 'insertRelationship',
-                fromId: r.fromId,
-                toId: r.toId,
-                props: prop };
+            const changeReq: RelationshipInsertRequest = {
+              type: 'insertRelationship',
+              fromId: r.fromId,
+              toId: r.toId,
+              inStyles: [ { role: 'LEGACY', id: r.fromId } ],
+              outStyles: [ { role: 'LEGACY', id: r.toId } ],
+              props: prop
+            };
             rval.push(
               changeReq
             );

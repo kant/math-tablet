@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // Requirements
 
-import { RelationshipProperties, StyleProperties, StyleId, NotebookChange, NotebookObject, StyleRelativePosition, StyleRole, StyleSubrole, StyleType } from './notebook.js';
+import { RelationshipProperties, StyleProperties, StyleId, NotebookChange, NotebookObject, StyleRelativePosition, StyleRole, StyleSubrole, StyleType, RelationshipStyle } from './notebook.js';
 
 // Types
 
@@ -102,7 +102,9 @@ export interface RelationshipDeleteRequest {
 export interface RelationshipInsertRequest {
   type: 'insertRelationship';
   fromId: StyleId;
+  inStyles: RelationshipStyle[];
   toId: StyleId;
+  outStyles: RelationshipStyle[];
   props: RelationshipProperties;
 }
 export interface StyleChangeRequest {
