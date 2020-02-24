@@ -161,7 +161,8 @@ export interface RelationshipObject extends RelationshipProperties {
   source: StyleSource;
   /* ELIMINATE */ fromId: StyleId;
   /* ELIMINATE */ toId: StyleId;
-  /* ADD */ // styles: RelationshipStyle[];
+  /* ADD */ // inStyles: RelationshipStyle[];
+  /* ADD */ // outStyles: RelationshipStyle[];
 }
 
 export type RelationshipRole =
@@ -186,12 +187,10 @@ export interface RelationshipProperties {
 export interface RelationshipStyle {
   role: RelationshipStyleRole;
   id: StyleId;
-  input: boolean;
 }
 
 export type RelationshipStyleRole =
-  'FROM' |      // Legacy compatibility
-  'TO' |        // Legacy compatibility
+  'LEGACY' |      // Legacy compatibility
   'INPUT-FORMULA' |
   'OUTPUT-FORMULA' |
   'TRANSFORMATION-TOOL' |
