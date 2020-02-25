@@ -32,7 +32,7 @@ import { Config } from '../config';
 
 // Types
 
-enum DataflowStatus {
+export enum DataflowStatus {
   Invalid = -1,
   Unchanged = 0,
   Changed = 1,
@@ -41,7 +41,7 @@ enum DataflowStatus {
 export interface DataflowValue {
   status: DataflowStatus;
   message?: string;   // If status is 'CHANGED' or 'UNCHANGED'
-  value?: any;        // If status is 'INVALED'
+  value?: any;        // If status is 'INVALID' ???
 }
 
 export type DataflowAsyncFunction = (relationship: RelationshipObject, inputValues: DataflowValue[]) => Promise<DataflowValue[]>;

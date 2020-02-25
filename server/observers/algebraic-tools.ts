@@ -30,9 +30,15 @@ import { StyleType,NotebookChange, StyleObject,
          HintData, HintRelationship, HintStatus} from '../../client/notebook';
 import { ToolInfo, NotebookChangeRequest, StyleInsertRequest, StyleDeleteRequest, StylePropertiesWithSubprops, WolframData,
          ToolData,RelationshipInsertRequest,
-         RelationshipDeleteRequest,
+         //         RelationshipDeleteRequest,
          StyleChangeRequest,
        } from '../../client/math-tablet-api';
+
+import {
+  DataflowStatus,
+  DataflowValue
+} from '../../server/observers/dataflow-observer';
+
 import { ServerNotebook, ObserverInstance } from '../server-notebook';
 import { execute,  convertWolframToTeX} from '../wolframscript';
 import { Config } from '../config';
@@ -57,12 +63,12 @@ export class AlgebraicToolsObserver implements ObserverInstance {
   // Instance Methods
 
   public async onChangesAsync(changes: NotebookChange[]): Promise<NotebookChangeRequest[]> {
-    debug(`onChanges ${changes.length}`);
+//    debug(`onChanges ${changes.length}`);
     const rval: NotebookChangeRequest[] = [];
     for (const change of changes) {
       await this.onChange(change, rval);
     }
-    debug(`onChanges returning ${rval.length} changes.`);
+//    debug(`onChanges returning ${rval.length} changes.`);
     return rval;
   }
 
@@ -78,13 +84,12 @@ export class AlgebraicToolsObserver implements ObserverInstance {
   // TODO: This is a direct duplicate code in symbol-classifier.ts
   // that duplication must be removed.
   public async useTool(toolStyle: StyleObject): Promise<NotebookChangeRequest[]> {
-    debug(`useTool ${this.notebook._path} ${toolStyle.id}`);
+//    debug(`useTool ${this.notebook._path} ${toolStyle.id}`);
 
     const toolInfo: ToolInfo = toolStyle.data;
     const toolData: ToolData = toolInfo.data;
-    console.dir(toolInfo.data);
 
-    const fromId = this.notebook.topLevelStyleOf(toolInfo.origin_id!).id;
+    const fromId = toolInfo.origin_id!;
     const toId = this.notebook.reserveId();
     const hintId = this.notebook.reserveId();
     const relId = this.notebook.reserveId();
@@ -154,7 +159,8 @@ export class AlgebraicToolsObserver implements ObserverInstance {
 
     const relProps : RelationshipProperties =
       { role: 'TRANSFORMATION',
-        data: toolData,
+        // Change this to Wolfram expression
+        data: toolData.transformation,
         id: relId,
         logic: HintRelationship.Equivalent,
         status: HintStatus.Correct,
@@ -171,10 +177,8 @@ export class AlgebraicToolsObserver implements ObserverInstance {
         outStyles: [ { role: 'LEGACY', id: toId },
                      { role: 'OUTPUT-FORMULA', id: toId},
                      { role: 'TRANSFORMATION-HINT', id: hintId}
-],
+                   ],
         props: relProps };
-
-    debug("relReq ===================",relReq);
 
     return [ hintReq, changeReq, relReq ];
   }
@@ -194,22 +198,25 @@ export class AlgebraicToolsObserver implements ObserverInstance {
   // Private Instance Methods
 
   private async onChange(change: NotebookChange, rval: NotebookChangeRequest[]): Promise<void> {
-    debug(`onChange ${this.notebook._path} ${change.type}`);
+//    debug(`onChange ${this.notebook._path} ${change.type}`);
     switch (change.type) {
       case 'styleInserted': {
         await this.algebraicToolsStyleInsertRule(change.style, rval);
         break;
       }
       case 'styleChanged': {
-        await this.algebraicToolsStyleChangeRule(change.style, rval);
+        // Although this will be part of a higher-level API later,
+        // I am faking it here for the purpose of testing..
+        await this.fakeDataFlowStyleChangeRule(change.style, rval);
+        //        await this.algebraicToolsStyleChangeRule(change.style, rval);
         break;
       }
-      // case 'relationshipInserted':
-      //   await this.algebraicToolsChangedRule(change.relationship, rval);
-      //   break;
-      // case 'relationshipDeleted':
-      //   await this.algebraicToolsChangedRule(change.relationship, rval);
-      //   break;
+        // case 'relationshipInserted':
+        //   await this.algebraicToolsChangedRule(change.relationship, rval);
+        //   break;
+        // case 'relationshipDeleted':
+        //   await this.algebraicToolsChangedRule(change.relationship, rval);
+        //   break;
       default: break;
     }
   }
@@ -220,9 +227,9 @@ export class AlgebraicToolsObserver implements ObserverInstance {
     return ae === be;
   }
   private async addTool(style : StyleObject,
-                              rval: NotebookChangeRequest[],
-                              transformation: WolframData,
-                              name: string,
+                        rval: NotebookChangeRequest[],
+                        transformation: WolframData,
+                        name: string,
                         html_fun: (s: string) => string,
                         tex_fun: (s: string) => string) :
   Promise<void> {
@@ -232,9 +239,6 @@ export class AlgebraicToolsObserver implements ObserverInstance {
     if (this.effectiveEqual(output,style.data)) { // nothing interesting to do!
       return;
     }
-    debug("look for match");
-    debug("style  :",style.data);
-    debug("wolfram:",output);
 
     // WARNING: I'm producing LaTeX here, but I am not handling variable
     // substitutions or changes. This will likely not work very well
@@ -264,14 +268,16 @@ export class AlgebraicToolsObserver implements ObserverInstance {
     rval.push(changeReq2);
   }
 
+  // This will be needed soon, but is not in use now - rlr
+  // @ts-ignore
   private removeAllOffspringOfType(obj: StyleObject,
                                    rval: NotebookChangeRequest[], typeToRemove: StyleType) {
     const kids : StyleObject[] =
       this.notebook.findStyles({ type: typeToRemove, recursive: true }, obj.id);
     kids.forEach(k => {
       const changeReq: StyleDeleteRequest = {
-         type: 'deleteStyle',
-         styleId: k.id
+        type: 'deleteStyle',
+        styleId: k.id
       };
       rval.push(changeReq);
     });
@@ -286,47 +292,54 @@ export class AlgebraicToolsObserver implements ObserverInstance {
     // if they are duplicates (which happens often), we add only
     // one tool for them.
     await this.addTool(style,rval,
-                             "InputForm[Factor[${expr}]]",
-                             "factor",
-                             (s : string) => `Factor: ${s}`,
+                       "InputForm[Factor[${expr}]]",
+                       "factor",
+                       (s : string) => `Factor: ${s}`,
                        (s : string) => `\\text{Expand: } ${s}`);
     await this.addTool(style,rval,
-                             "InputForm[Expand[${expr}]]",
-                             "expand",
+                       "InputForm[Expand[${expr}]]",
+                       "expand",
                        (s : string) => `Expand: ${s}`,
                        (s : string) => `\\text{Expand: } ${s}`);
     await this.addTool(style,rval,
-                             "InputForm[ExpandAll[${expr}]]",
-                             "expand all",
+                       "InputForm[ExpandAll[${expr}]]",
+                       "expand all",
                        (s : string) => `ExpandAll: ${s}`,
                        (s : string) => `\\text{ExpandAll: } ${s}`);
     await this.addTool(style,rval,
-                             "InputForm[Simplify[${expr}]]",
-                             "simplify",
+                       "InputForm[Simplify[${expr}]]",
+                       "simplify",
                        (s : string) => `Simplify: ${s}`,
                        (s : string) => `\\text{Simplify: } ${s}`);
-     await this.addTool(style,rval,
-                             "InputForm[Cancel[${expr}]]",
-                             "cancel",
-                             (s : string) => `Cancel: ${s}`,
+    await this.addTool(style,rval,
+                       "InputForm[Cancel[${expr}]]",
+                       "cancel",
+                       (s : string) => `Cancel: ${s}`,
                        (s : string) => `\\text{Cancel: } ${s}`);
-     await this.addTool(style,rval,
-                             "InputForm[Together[${expr}]]",
-                             "together",
-                        (s : string) => `Together: ${s}`,
+    await this.addTool(style,rval,
+                       "InputForm[Together[${expr}]]",
+                       "together",
+                       (s : string) => `Together: ${s}`,
                        (s : string) => `\\text{Together: } ${s}`);
-      await this.addTool(style,rval,
-                             "InputForm[Apart[${expr}]]",
-                             "apart",
-                             (s : string) => `Apart: ${s}`,
-                         (s : string) => `\\text{Apart: } ${s}`);
+    await this.addTool(style,rval,
+                       "InputForm[Apart[${expr}]]",
+                       "apart",
+                       (s : string) => `Apart: ${s}`,
+                       (s : string) => `\\text{Apart: } ${s}`);
   }
 
+  // This is a mechanism of calling the function
+  // that we hope to call from the more abstract API.
+  // It is therefore a temporary scaffold.
+  private async fakeDataFlowStyleChangeRule(style: StyleObject, rval: NotebookChangeRequest[]): Promise<void> {
 
-  // Note: as of 02/24 with the introduction of N-Ary relationships,
-  // this is now logically obsolete.
-  private async algebraicToolsStyleChangeRule(style: StyleObject, rval: NotebookChangeRequest[]): Promise<void> {
-    debug("cccc",style);
+    // Possibly if we are not an evaluation we should do something else,
+    // like a simple recalculcaiton, but I will delay that.
+    if (style.role != 'EVALUATION') return;
+
+    // It is unclear how we will handle the changes of the tools
+    // in this case, which still must be accomplished.
+    // I believe this will require separate action...
     this.removeAllOffspringOfType(style,rval,'TOOL');
     await this.algebraicToolsStyleInsertRule(style, rval);
 
@@ -336,98 +349,128 @@ export class AlgebraicToolsObserver implements ObserverInstance {
     // if any relationships against that force us to
     // First, we want to find all TRANSFORM relations that have
     // a To clause mathing this style. They must be marked unverified.
+
+    // Transformation relationships appear to be between top level styles...
     const relOp : FindRelationshipOptions = {
-      toId: style.id,
+      fromId: style.id,
       role: 'TRANSFORMATION' };
 
 
     const relsInPlace : RelationshipObject[] = this.notebook.findRelationships(relOp);
-    debug("AAA",relsInPlace);
 
-    // TODO: Here we want to change the status, which we have not
-    // yet even moved to the relationship.
-    // Then we need to listen for a relationship change so that the
-    // hint can change appropriately.
+    for(var i = 0; i < relsInPlace.length; i++) {
+      var r = relsInPlace[i];
+      // We have a bug unrelated to this code (I think) where by old
+      // relationships are not being removed. I therefore check validity here;
+      // but we must track down how this is coming about.
+      if (!this.notebook.hasStyle({},r.toId)
+          ||
+          !this.notebook.hasStyle({},r.fromId)
+         ) {
+        debug("Discarding relation: ", r);
+        console.error("Found invalid relation: ",r);
+        continue;
+      }
 
-    relsInPlace.forEach(
-      r => {
-        // I guess since we don't have a relationshipChanged property,
-        // we need to delete this relationship and
-        // add another. We probably to publish a hint changed
-        // request as well.
-        const toId = this.notebook.reserveId();
-        const relId = this.notebook.reserveId();
-        const relProps : RelationshipProperties =
-          {
-            role: r.role,
-            data: r.data,
-            id: relId,
-            logic: HintRelationship.Equivalent,
-            status: HintStatus.Unknown,
-          };
-// Now we find the HINT
-        const hintStyle =
-          this.notebook.findStyles({ type: 'HINT-DATA',
-                                    role: 'HINT',
-                                    recursive: true,
-                                   }).find(s =>
-                                           s.data.idOfRelationshipDecorated == r.id );
-        const hintId = hintStyle!.id;
 
-        // now we will use the old tool id from the
-        // last relationship, until we can mke the change
-        // one that does not destroy relationships and recreate them.
-        const toolId = r.inStyles!.find( p =>
-                                             (p.role == 'TRANSFORMATION-TOOL'))!.id;
+      // We will call dependentChangeRule once for each
+      // relation r. We artificially now construct input values.
+      // Using special knowledge of this transform, this is easy enough.
+      var dfv : DataflowValue[] = [];
+      // First is the formula
+      dfv.push({ status: DataflowStatus.Changed,
+                 message: 'CHANGED',
+                 value: style.data });
 
-        const relReq: RelationshipInsertRequest =
-          { type: 'insertRelationship',
-            fromId: r.fromId,
-            toId: toId,
-            inStyles: [ { role: 'LEGACY', id: r.fromId },
-                        { role: 'INPUT-FORMULA', id: r.fromId},
-                        { role: 'TRANSFORMATION-TOOL', id: toolId}
-                      ],
-            outStyles: [ { role: 'LEGACY', id: toId },
-                         { role: 'OUTPUT-FORMULA', id: toId},
-                         { role: 'TRANSFORMATION-HINT', id: hintId}
-                       ],
-            props: relProps };
-        rval.push(relReq);
+      // Second is the Tool/Transform
+      dfv.push({ status: DataflowStatus.Changed,
+                 message: 'UNCHANGED',
+                 value: r.data });
 
-        const deleteReq : RelationshipDeleteRequest = {
-          type: 'deleteRelationship',
-          id: r.id
-        };
-        rval.push(deleteReq);
+      const result = await this.dependentChangeRule(r,dfv);
+      // We now may enter a request change for the second formula and hint
 
-        if (hintStyle) {
+      const cr: StyleChangeRequest = {
+        type: 'changeStyle',
+        styleId: r.toId,
+        data: result[0].value,
+      };
+      rval.push(cr);
 
-        const data: HintData = {
-          relationship: HintRelationship.Equivalent,
-          status: HintStatus.Unknown,
-          idOfRelationshipDecorated: relId
-        };
+      const data: HintData = {
+        relationship: HintRelationship.Equivalent,
+        status: HintStatus.Correct,
+        idOfRelationshipDecorated: r.id
+      };
 
-        const hintReq: StyleChangeRequest = {
-          styleId: hintStyle.id,
-          type: 'changeStyle',
-          data,
-        };
-          rval.push(hintReq);
-        } else {
-          console.error("internal error");
-        }
+      // In order to load this, we must find the HINT matching this relation
+      const hintStyles = this.notebook.findStyles(
+        { role: 'HINT', recursive: true}
+      );
+
+      var hintStyle = hintStyles.find( f => f.data.idOfRelationshipDecorated == r.id);
+
+      const hintReq: StyleChangeRequest = {
+        styleId: hintStyle!.id,
+        type: 'changeStyle',
+        data,
+      };
+      rval.push(hintReq);
     }
-
-    );
-    debug("PUSHES",rval);
-
-
-// Now the hint won't redraw unless we listen for this change or submit..
-
   }
 
-  // Helper Functions
 
+  // RLR attempts here to create a change function
+  // to be used by the high-level API...
+  // @ts-ignore
+  private async dependentChangeRule(relationship: RelationshipObject,
+                                    inputValues: DataflowValue[]) : Promise<DataflowValue[]> {
+
+    var dfvs: DataflowValue[] = [];
+    if (relationship.role != 'TRANSFORMATION') return dfvs;
+    // In this case (that of ALGEBRAIC-TOOLS),
+    // The outputs are only FORMULA and HINT in that order
+
+    // TODO: When LEGACY is removed, this shall be
+    // 0, not 1.
+    const changedData = inputValues[0].value;
+
+    var substituted = relationship.data.replace('${expr}', changedData);
+
+    var hdata : HintData = {
+      relationship: HintRelationship.Equivalent,
+      status: HintStatus.Correct,
+      idOfRelationshipDecorated: relationship.id,
+    };
+
+    try {
+      const transformed = await execute(substituted);
+
+      dfvs.push({
+        status: DataflowStatus.Changed,
+        message: 'CHANGED',
+        value: transformed
+      });
+      dfvs.push({
+        status: DataflowStatus.Changed,
+        message: 'CHANGED',
+        value: hdata,
+      });
+    } catch (e) {
+      debug("error in wolfram executions"+substituted);
+      console.error("error in wolfram executions"+substituted);
+      dfvs[0] = {
+        status: DataflowStatus.Invalid,
+        message: 'UNCHANGED',
+        value: changedData
+      }
+      dfvs[1] = {
+        status: DataflowStatus.Invalid,
+        message: 'UNCHANGED',
+        value: hdata,
+      }
+    }
+
+    return dfvs;
+  }
 }

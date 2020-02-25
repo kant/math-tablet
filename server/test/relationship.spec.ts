@@ -30,7 +30,7 @@ import { NotebookChange,  StyleObject, RelationshipObject,
          StyleId
        } from '../../client/notebook';
 import { NotebookChangeRequest, StyleInsertRequest,
-         //         StyleChangeRequest,
+         StyleChangeRequest,
          //         StyleMoveRequest,
          //         StyleDeleteRequest,
          //        StylePropertiesWithSubprops
@@ -182,13 +182,14 @@ describe("test relationships", function() {
 
     it("Can derive formulae then propagate a change", async function(){
       const data:string[] = [
-        "x + x^2"];
+        "x + x^2",
+        "2*x + 2*x^2"];
       const changeRequests = generateInsertRequests(data);
       await notebook.requestChanges('TEST', [changeRequests[0]]);
       const F1 = notebook.topLevelStyleOf(1);
       assert.deepEqual(F1.type,'WOLFRAM');
 
-      const F1_wolfram = notebook.findStyle({ type: 'WOLFRAM', recursive: true }, F1.id);
+      const F1_wolfram = notebook.findStyle({ type: 'WOLFRAM', role: 'EVALUATION', recursive: true }, F1.id);
 
       assert.isNotNull(F1_wolfram);
 
@@ -200,25 +201,38 @@ describe("test relationships", function() {
 
       // Now we wish to "apply" this transform as if it were "used" in the GUI...
       // I'm suspecting the high-level API for this could be improved...
-      var ncrs1 = await notebook.useTool(F1_factor_tool!.id);
-//      await notebook.requestChanges('TEST', ncrs1);
-      console.log(ncrs1);
-      console.log(notebook);
+      await notebook.useTool(F1_factor_tool!.id);
 
-      const Wolframs = notebook.findStyles({ type: 'WOLFRAM', role: 'EVALUATION', recursive: true });
+      var Wolframs = notebook.findStyles({ type: 'WOLFRAM', role: 'EVALUATION', recursive: true });
 
       assert.equal(Wolframs.length,2);
       const F2_wolfram = Wolframs.find(w => w.id != F1.id );
 
       const F2_algebra_tools = notebook.findStyles({ type: 'TOOL', source: 'ALGEBRAIC-TOOLS', recursive: true }, F2_wolfram!.id);
       // There will be several tools, we select the one whose "name" is "factor"
-      console.log(F2_algebra_tools);
       const F2_simplify_tool = F2_algebra_tools.find( e => e.data.name == "simplify");
 
-      var ncrs2 = await notebook.useTool(F2_simplify_tool!.id);
-//      await notebook.requestChanges('TEST', ncrs2);
-      console.log(ncrs2);
-      console.log(notebook);
+      await notebook.useTool(F2_simplify_tool!.id);
+
+      // Now, having accomplished this, we wish to change F1 and observe
+      // that that change propagatest to F3.
+      Wolframs = notebook.findStyles({ type: 'WOLFRAM', role: 'EVALUATION', recursive: true });
+      const F3_wolfram = Wolframs.find(w => (w.id != F1.id && w.id != F2_wolfram!.id));
+
+
+      // Now we will change something... and compare
+      // F1 to F3
+      const cr: StyleChangeRequest = {
+        type: 'changeStyle',
+        styleId: F1_wolfram!.id,
+        data: data[1]
+      };
+      await serializeChangeRequests(notebook,[cr]);
+
+      // First we will check that we have affected F2, then F3...
+      // This is a bit fragile and wolfram specific...
+      assert.equal("2*x + 2*x^2",F2_wolfram!.data);
+      assert.equal("2*x*(1 + x)",F3_wolfram!.data);
 
     });
   });
