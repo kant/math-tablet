@@ -321,6 +321,7 @@ export const STYLE_SOURCES = [
   'SYMBOL-CLASSIFIER',
   'TEX-FORMATTER',
   'ANY-INPUT',        // This represents ANY input, no matter the type enterred.
+  'DATAFLOW-OBSERVER',
   'SYSTEM',           // The Math-Tablet app itself, not the user or an observer.
   'TEST',             // An example source used only by our test system
   'USER',             // Directly entered by user

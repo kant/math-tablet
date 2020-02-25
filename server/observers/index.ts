@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import { Config, Credentials } from '../config';
 import { ServerNotebook } from '../server-notebook';
 
+import { DataflowObserver } from './dataflow-observer';
 import { MathematicaObserver } from './mathematica-cas';
 import { MyScriptObserver } from './myscript-observer';
 import { SandboxObserver } from './sandbox';
@@ -52,6 +53,7 @@ export async function initialize(config: Config, credentials: Credentials): Prom
     ServerNotebook.registerObserver('MYSCRIPT', MyScriptObserver);
   }
   await SandboxObserver.initialize(config);
+  ServerNotebook.registerObserver('DATAFLOW-OBSERVER', DataflowObserver);
   ServerNotebook.registerObserver('SANDBOX', SandboxObserver);
   ServerNotebook.registerObserver('SVG', SvgObserver);
 }
