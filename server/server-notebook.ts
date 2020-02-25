@@ -443,6 +443,11 @@ export class ServerNotebook extends Notebook {
             // REVIEW: Proper error handling??
             console.error(`GSSIDO Error: fromId ${r.fromId} missing (inner)`);
             // console.error(this);
+            // I believe now what we have "reserve" ids
+            // It should always be possible to remove this relation.
+            // The danger here is that we are covering up where these are
+            // coming from! REVIEW - rlr
+            this.deleteRelationship(r);
           }
 
         }
@@ -450,6 +455,7 @@ export class ServerNotebook extends Notebook {
         // REVIEW: Proper error handling??
         console.error(`GSSIDO Errior: fromId ${r.fromId} missing (outer)`);
         // console.error(this);
+        this.deleteRelationship(r);
       }
     });
     return symbolStyles;

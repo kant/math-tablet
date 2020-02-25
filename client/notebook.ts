@@ -644,7 +644,9 @@ export class Notebook {
     if (change.data) { style.data = change.data; }
   }
 
-  private deleteRelationship(relationship: RelationshipObject): void {
+  // Making this public for the purpose of error handling
+  // in server-notebook...this requires REVEIW - rlr
+  public deleteRelationship(relationship: RelationshipObject): void {
     // TODO: relationship may have already been deleted by another observer.
     const id = relationship.id;
     if (!this.relationshipMap[id]) { throw new Error(`Deleting unknown relationship ${id}`); }
