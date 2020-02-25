@@ -30,7 +30,7 @@ import { StyleType,NotebookChange, StyleObject,
          HintData, HintRelationship, HintStatus} from '../../client/notebook';
 import { ToolInfo, NotebookChangeRequest, StyleInsertRequest, StyleDeleteRequest, StylePropertiesWithSubprops, WolframData,
          ToolData,RelationshipInsertRequest,
-         //         RelationshipDeleteRequest,
+//         RelationshipDeleteRequest,
          StyleChangeRequest,
        } from '../../client/math-tablet-api';
 
@@ -89,7 +89,22 @@ export class AlgebraicToolsObserver implements ObserverInstance {
     const toolInfo: ToolInfo = toolStyle.data;
     const toolData: ToolData = toolInfo.data;
 
-    const fromId = toolInfo.origin_id!;
+    //    const fromId = toolInfo.origin_id!;
+
+    // We made a design decision that the relationship
+    // is from top level formula and to top level formula
+
+    debug("xxx",toolInfo);
+
+    const origin_top = this.notebook.topLevelStyleOf(toolInfo.origin_id!);
+    var fromId : number;
+    if (origin_top.role == 'FORMULA' && origin_top.type == 'FORMULA-DATA') {
+      fromId = origin_top.id;
+    } else {
+      fromId = this.notebook.findStyle({role: 'FORMULA', type: 'FORMULA-DATA',recursive: true },
+                               origin_top!.id)!.id;
+    }
+
     const toId = this.notebook.reserveId();
     const hintId = this.notebook.reserveId();
     const relId = this.notebook.reserveId();
@@ -207,6 +222,7 @@ export class AlgebraicToolsObserver implements ObserverInstance {
       case 'styleChanged': {
         // Although this will be part of a higher-level API later,
         // I am faking it here for the purpose of testing..
+//        this.checkUserInputChangeRule(change.style, rval);
         await this.fakeDataFlowStyleChangeRule(change.style, rval);
         //        await this.algebraicToolsStyleChangeRule(change.style, rval);
         break;
@@ -284,6 +300,42 @@ export class AlgebraicToolsObserver implements ObserverInstance {
 
   }
 
+  // private checkUserInputChangeRule(style: StyleObject, rval: NotebookChangeRequest[]) : void {
+  //   if (style.role == 'REPRESENTATION') {
+  //     debug("found Representation change!");
+  //     // This means the user changed it, I am not sure the
+  //     // GUI is correctly updateing types in this case!
+  //     // It seems that the SOURCE should change to USER-DATA
+
+  //     const relOp : FindRelationshipOptions = {
+  //       toId: style.id,
+  //       role: 'TRANSFORMATION' };
+
+  //     const relsInPlace : RelationshipObject[] = this.notebook.findRelationships(relOp);
+  //     relsInPlace.forEach( r => {
+  //       const rdr : RelationshipDeleteRequest = {
+  //         type: 'deleteRelationship',
+  //         id: r.id,
+  //       };
+  //       rval.push(rdr);
+  //       // Now the Hint associated with these must be invalidated.
+  //       const kids : StyleObject[] =
+  //         this.notebook.findStyles({ role: 'HINT', type: 'HINT-DATA', source: 'ALGEBRAIC-TOOLS', recursive: true });
+  //       kids.forEach(k => {
+  //         if (k. == r.id) {
+  //           const changeReq: StyleDeleteRequest = {
+  //             type: 'deleteStyle',
+  //             styleId: k.id
+  //           };
+  //           console.log("deleting: ",k);
+  //           rval.push(changeReq);
+  //         }
+  //       });
+
+  //     });
+  //   }
+  // }
+
   private async algebraicToolsStyleInsertRule(style: StyleObject, rval: NotebookChangeRequest[]): Promise<void> {
 
     if (style.type != 'WOLFRAM' || style.role != 'EVALUATION') { return; }
@@ -335,87 +387,104 @@ export class AlgebraicToolsObserver implements ObserverInstance {
 
     // Possibly if we are not an evaluation we should do something else,
     // like a simple recalculcaiton, but I will delay that.
-    if (style.role != 'EVALUATION') return;
+    debug("XXXXXXXXXX style",style);
+    if (style.role != 'EVALUATION') {
+      return;
+    } else {
 
-    // It is unclear how we will handle the changes of the tools
-    // in this case, which still must be accomplished.
-    // I believe this will require separate action...
-    this.removeAllOffspringOfType(style,rval,'TOOL');
-    await this.algebraicToolsStyleInsertRule(style, rval);
-
-    // The relationship will be tied to the Representation
-
-    // I think all of the above is correct, but now we wish to see
-    // if any relationships against that force us to
-    // First, we want to find all TRANSFORM relations that have
-    // a To clause mathing this style. They must be marked unverified.
-
-    // Transformation relationships appear to be between top level styles...
-    const relOp : FindRelationshipOptions = {
-      fromId: style.id,
-      role: 'TRANSFORMATION' };
+      // It is unclear how we will handle the changes of the tools
+      // in this case, which still must be accomplished.
+      // I believe this will require separate action...
+      this.removeAllOffspringOfType(style,rval,'TOOL');
+      await this.algebraicToolsStyleInsertRule(style, rval);
 
 
-    const relsInPlace : RelationshipObject[] = this.notebook.findRelationships(relOp);
+      // The relationship will be tied to the Representation
 
-    for(var i = 0; i < relsInPlace.length; i++) {
-      var r = relsInPlace[i];
-      // We have a bug unrelated to this code (I think) where by old
-      // relationships are not being removed. I therefore check validity here;
-      // but we must track down how this is coming about.
-      if (!this.notebook.hasStyle({},r.toId)
-          ||
-          !this.notebook.hasStyle({},r.fromId)
-         ) {
-        debug("Discarding relation: ", r);
-        console.error("Found invalid relation: ",r);
-        continue;
+      // I think all of the above is correct, but now we wish to see
+      // if any relationships against that force us to
+      // First, we want to find all TRANSFORM relations that have
+      // a To clause mathing this style. They must be marked unverified.
+
+      // Transformation relationships appear to be between top level styles...
+      // We have to find based on the top level formula
+      // WARNING UGLY HACK CODE (DUPLICATION OF ABOVE)
+      const origin_top = this.notebook.topLevelStyleOf(style.id);
+
+      var fromId : number;
+      if (origin_top.role == 'FORMULA' && origin_top.type == 'FORMULA-DATA') {
+        fromId = origin_top.id;
+      } else {
+        fromId = this.notebook.findStyle({role: 'FORMULA', type: 'FORMULA-DATA',recursive: true },
+                                         origin_top!.id)!.id;
       }
+      const relOp : FindRelationshipOptions = {
+        fromId: fromId,
+        role: 'TRANSFORMATION' };
 
 
-      // We will call dependentChangeRule once for each
-      // relation r. We artificially now construct input values.
-      // Using special knowledge of this transform, this is easy enough.
-      var dfv : DataflowValue[] = [];
-      // First is the formula
-      dfv.push({ status: DataflowStatus.Changed,
-                 message: 'CHANGED',
-                 value: style.data });
+      const relsInPlace : RelationshipObject[] = this.notebook.findRelationships(relOp);
 
-      // Second is the Tool/Transform
-      dfv.push({ status: DataflowStatus.Changed,
-                 message: 'UNCHANGED',
-                 value: r.data });
+      for(var i = 0; i < relsInPlace.length; i++) {
+        var r = relsInPlace[i];
+        // We have a bug unrelated to this code (I think) where by old
+        // relationships are not being removed. I therefore check validity here;
+        // but we must track down how this is coming about.
+        if (!this.notebook.hasStyle({},r.toId)
+            ||
+            !this.notebook.hasStyle({},r.fromId)
+           ) {
+          debug("Discarding relation: ", r);
+          console.error("Found invalid relation: ",r);
+          continue;
+        }
 
-      const result = await this.dependentChangeRule(r,dfv);
-      // We now may enter a request change for the second formula and hint
 
-      const cr: StyleChangeRequest = {
-        type: 'changeStyle',
-        styleId: r.toId,
-        data: result[0].value,
-      };
-      rval.push(cr);
+        // We will call dependentChangeRule once for each
+        // relation r. We artificially now construct input values.
+        // Using special knowledge of this transform, this is easy enough.
+        var dfv : DataflowValue[] = [];
+        // First is the formula
+        debug("DATA DATA DATA",style);
+        dfv.push({ status: DataflowStatus.Changed,
+                   message: 'CHANGED',
+                   value: style.data });
 
-      const data: HintData = {
-        relationship: HintRelationship.Equivalent,
-        status: HintStatus.Correct,
-        idOfRelationshipDecorated: r.id
-      };
+        // Second is the Tool/Transform
+        dfv.push({ status: DataflowStatus.Changed,
+                   message: 'UNCHANGED',
+                   value: r.data });
 
-      // In order to load this, we must find the HINT matching this relation
-      const hintStyles = this.notebook.findStyles(
-        { role: 'HINT', recursive: true}
-      );
+        const result = await this.dependentChangeRule(r,dfv);
+        // We now may enter a request change for the second formula and hint
 
-      var hintStyle = hintStyles.find( f => f.data.idOfRelationshipDecorated == r.id);
+        const cr: StyleChangeRequest = {
+          type: 'changeStyle',
+          styleId: r.toId,
+          data: result[0].value,
+        };
+        rval.push(cr);
 
-      const hintReq: StyleChangeRequest = {
-        styleId: hintStyle!.id,
-        type: 'changeStyle',
-        data,
-      };
-      rval.push(hintReq);
+        const data: HintData = {
+          relationship: HintRelationship.Equivalent,
+          status: HintStatus.Correct,
+          idOfRelationshipDecorated: r.id
+        };
+
+        // In order to load this, we must find the HINT matching this relation
+        const hintStyles = this.notebook.findStyles(
+          { role: 'HINT', recursive: true}
+        );
+
+        var hintStyle = hintStyles.find( f => f.data.idOfRelationshipDecorated == r.id);
+
+        const hintReq: StyleChangeRequest = {
+          styleId: hintStyle!.id,
+          type: 'changeStyle',
+          data,
+        };
+        rval.push(hintReq);
+      }
     }
   }
 
