@@ -29,7 +29,7 @@ import { NotebookChange, StyleObject, StyleId,
          StyleMoved,
          FindRelationshipOptions,
          StyleInserted, StyleChanged,
-         HintData, HintRelationship, HintStatus
+         HintData, HintRelationship, HintStatus, FormulaData
        } from '../../client/notebook';
 import { SymbolData, WolframData, NotebookChangeRequest, StyleInsertRequest,
          ToolInfo,
@@ -113,11 +113,13 @@ export class SymbolClassifierObserver implements ObserverInstance {
       styleProps: hintProps,
     };
 
+    const wolframData = toolStyle.data.data.output;
+    const formulaData: FormulaData = { wolframData };
     const styleProps: StylePropertiesWithSubprops = {
       id: toId,
       role: 'FORMULA',
       type: 'FORMULA-DATA',
-      data: undefined,
+      data: formulaData,
       subprops: [{
         role: 'REPRESENTATION',
         type: 'WOLFRAM',

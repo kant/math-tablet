@@ -26,7 +26,7 @@ import { assert } from 'chai';
 import 'mocha';
 // import * as sinon from 'sinon';
 
-import { NotebookChange,  StyleObject, } from '../../client/notebook';
+import { NotebookChange,  StyleObject, FormulaData, } from '../../client/notebook';
 import { NotebookChangeRequest, StyleInsertRequest, LatexData } from '../../client/math-tablet-api';
 import { ServerNotebook, ObserverInstance }  from '../server-notebook';
 
@@ -58,18 +58,19 @@ export class TestObserver implements ObserverInstance {
 
 function generateInsertRequests(inputs :string[]) : StyleInsertRequest[] {
   var reqs : StyleInsertRequest[] = [];
-  for(const i of inputs) {
+  for(const wolframData of inputs) {
+    const formulaData: FormulaData = { wolframData };
     reqs.push({
       type: 'insertStyle',
       styleProps: {
         role: 'FORMULA',
         type: 'FORMULA-DATA',
-        data: undefined,
+        data: formulaData,
         subprops: [{
           role: 'REPRESENTATION',
           subrole: 'INPUT',
           type: 'WOLFRAM',
-          data: i,
+          data: wolframData,
         }],
       }
     });

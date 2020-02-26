@@ -1,3 +1,5 @@
+import { WolframData } from "./math-tablet-api";
+
 /*
 Math Tablet
 Copyright (C) 2019 Public Invention
@@ -54,6 +56,7 @@ export interface StrokeGroup {
 
 // NOTE: toId and fromId are mutually "or". The ids and all other fields are "and".
 export interface FindRelationshipOptions {
+  dataflow?: boolean;
   toId?: StyleId;
   fromId?: StyleId;
   role?: RelationshipRole;
@@ -68,6 +71,10 @@ export interface FindStyleOptions {
   notSource?: StyleSource;
   type?: StyleType;
   recursive?: boolean;
+}
+
+export interface FormulaData {
+  wolframData?: WolframData;
 }
 
 export interface HintData {
@@ -180,6 +187,7 @@ export interface RelationshipProperties {
   status?: HintStatus;
   logic?: HintRelationship;
   data?: any;
+  dataflow?: boolean;
 }
 
 export interface RelationshipStyle {
@@ -321,7 +329,8 @@ export const STYLE_SOURCES = [
   'SYMBOL-CLASSIFIER',
   'TEX-FORMATTER',
   'ANY-INPUT',        // This represents ANY input, no matter the type enterred.
-  'DATAFLOW-OBSERVER',
+  'ALGEBRAIC-DATAFLOW-OBSERVER',
+  'FORMULA-OBSERVER',
   'SYSTEM',           // The Math-Tablet app itself, not the user or an observer.
   'TEST',             // An example source used only by our test system
   'USER',             // Directly entered by user
@@ -506,8 +515,9 @@ export class Notebook {
     //         so we could obtain an iterator over the values, and not have to
     //         construct an intermediate array.
     for (const relationship of <RelationshipObject[]>Object.values(this.relationshipMap)) {
-      if ((options.fromId) && !relationship.inStyles.find(rs=>rs.id==options.fromId)) { continue; }
-      if ((options.toId) && !relationship.outStyles.find(rs=>rs.id==options.toId)) { continue; }
+      if (typeof options.dataflow != 'undefined' && relationship.dataflow != options.dataflow) { continue; }
+      if (options.fromId && !relationship.inStyles.find(rs=>rs.id==options.fromId)) { continue; }
+      if (options.toId && !relationship.outStyles.find(rs=>rs.id==options.toId)) { continue; }
       if (options.source && relationship.source != options.source) { continue; }
       if (options.role && relationship.role != options.role) { continue; }
       rval.push(relationship);

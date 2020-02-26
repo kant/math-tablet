@@ -22,13 +22,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import { Config, Credentials } from '../config';
 import { ServerNotebook } from '../server-notebook';
 
-import { DataflowObserver } from './dataflow-observer';
+import { AlgebraicDataflowObserver } from './algebraic-dataflow-observer';
 import { MathematicaObserver } from './mathematica-cas';
 import { MyScriptObserver } from './myscript-observer';
 import { SandboxObserver } from './sandbox';
 import { SubtrivClassifierObserver } from './subtriv-classifier';
 import { AlgebraicToolsObserver } from './algebraic-tools';
 import { EquationSolverObserver } from './equation-solver';
+import { FormulaObserver } from './formula-observer';
 import { TeXFormatterObserver } from './tex-formatter';
 import { SymbolClassifierObserver } from './symbol-classifier';
 import { SvgObserver } from './svg-observer';
@@ -40,6 +41,7 @@ export async function initialize(config: Config, credentials: Credentials): Prom
 
   if (config.mathematica) {
     await MathematicaObserver.initialize(config);
+    ServerNotebook.registerObserver('ALGEBRAIC-DATAFLOW-OBSERVER', AlgebraicDataflowObserver);
     ServerNotebook.registerObserver('MATHEMATICA', MathematicaObserver);
     ServerNotebook.registerObserver('SUBTRIV-CLASSIFIER', SubtrivClassifierObserver);
     ServerNotebook.registerObserver('SYMBOL-CLASSIFIER', SymbolClassifierObserver);
@@ -53,7 +55,7 @@ export async function initialize(config: Config, credentials: Credentials): Prom
     ServerNotebook.registerObserver('MYSCRIPT', MyScriptObserver);
   }
   await SandboxObserver.initialize(config);
-  ServerNotebook.registerObserver('DATAFLOW-OBSERVER', DataflowObserver);
+  ServerNotebook.registerObserver('FORMULA-OBSERVER', FormulaObserver);
   ServerNotebook.registerObserver('SANDBOX', SandboxObserver);
   ServerNotebook.registerObserver('SVG', SvgObserver);
 }

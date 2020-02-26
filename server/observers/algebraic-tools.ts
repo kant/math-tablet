@@ -27,7 +27,7 @@ import { StyleType,NotebookChange, StyleObject,
          RelationshipObject,
          RelationshipProperties,
          FindRelationshipOptions,
-         HintData, HintRelationship, HintStatus} from '../../client/notebook';
+         HintData, HintRelationship, HintStatus, FormulaData} from '../../client/notebook';
 import { ToolInfo, NotebookChangeRequest, StyleInsertRequest, StyleDeleteRequest, StylePropertiesWithSubprops, WolframData,
          ToolData,RelationshipInsertRequest,
 //         RelationshipDeleteRequest,
@@ -132,7 +132,7 @@ export class AlgebraicToolsObserver implements ObserverInstance {
     // const styleProps: StylePropertiesWithSubprops = {
     //   role: 'FORMULA',
     //   type: 'FORMULA-DATA',
-    //   data: undefined,
+    //   data: { wolframData: toolData.output },
     //   subprops: [{
     //     id: toId,
     //     role: 'REPRESENTATION',
@@ -150,10 +150,11 @@ export class AlgebraicToolsObserver implements ObserverInstance {
     //   }
     // };
 
+    const formulaData: FormulaData = { wolframData: toolData.output };
     const styleProps: StylePropertiesWithSubprops = {
       role: 'FORMULA',
       type: 'FORMULA-DATA',
-      data: undefined,
+      data: formulaData,
       subprops: [{
         id: toId,
         role: 'REPRESENTATION',
@@ -174,8 +175,8 @@ export class AlgebraicToolsObserver implements ObserverInstance {
 
     const relProps : RelationshipProperties =
       { role: 'TRANSFORMATION',
-        // Change this to Wolfram expression
-        data: toolData.transformation,
+        data: toolData.transformation, // Change this to Wolfram expression
+        dataflow: true,
         id: relId,
         logic: HintRelationship.Equivalent,
         status: HintStatus.Correct,
@@ -185,11 +186,11 @@ export class AlgebraicToolsObserver implements ObserverInstance {
       { type: 'insertRelationship',
         fromId,
         toId,
-        inStyles: [ { role: 'LEGACY', id: fromId },
+        inStyles: [
                     { role: 'INPUT-FORMULA', id: fromId},
                     { role: 'TRANSFORMATION-TOOL', id: toolStyle.id}
                   ],
-        outStyles: [ { role: 'LEGACY', id: toId },
+        outStyles: [
                      { role: 'OUTPUT-FORMULA', id: toId},
                      { role: 'TRANSFORMATION-HINT', id: hintId}
                    ],
@@ -222,8 +223,8 @@ export class AlgebraicToolsObserver implements ObserverInstance {
       case 'styleChanged': {
         // Although this will be part of a higher-level API later,
         // I am faking it here for the purpose of testing..
-//        this.checkUserInputChangeRule(change.style, rval);
-        await this.fakeDataFlowStyleChangeRule(change.style, rval);
+        // his.checkUserInputChangeRule(change.style, rval);
+        // await this.fakeDataFlowStyleChangeRule(change.style, rval);
         //        await this.algebraicToolsStyleChangeRule(change.style, rval);
         break;
       }
@@ -383,6 +384,8 @@ export class AlgebraicToolsObserver implements ObserverInstance {
   // This is a mechanism of calling the function
   // that we hope to call from the more abstract API.
   // It is therefore a temporary scaffold.
+  // TODO: REMOVE
+  // @ts-ignore
   private async fakeDataFlowStyleChangeRule(style: StyleObject, rval: NotebookChangeRequest[]): Promise<void> {
 
     // Possibly if we are not an evaluation we should do something else,
@@ -526,8 +529,8 @@ export class AlgebraicToolsObserver implements ObserverInstance {
         value: hdata,
       });
     } catch (e) {
-      debug("error in wolfram executions"+substituted);
-      console.error("error in wolfram executions"+substituted);
+      debug("error in wolfram execution: "+substituted);
+      console.error("error in wolfram execution: "+substituted);
       dfvs[0] = {
         status: DataflowStatus.Invalid,
         message: 'UNCHANGED',

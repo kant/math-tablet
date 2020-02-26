@@ -26,7 +26,7 @@ import { assert } from 'chai';
 import 'mocha';
 import * as sinon from 'sinon';
 
-import { NotebookChange, StyleInserted, StyleObject } from '../../client/notebook';
+import { NotebookChange, StyleInserted, StyleObject, FormulaData } from '../../client/notebook';
 import { NotebookChangeRequest, StyleInsertRequest, StylePropertiesWithSubprops, ToolInfo } from '../../client/math-tablet-api';
 import { ServerNotebook, ObserverInstance }  from '../server-notebook';
 import { Config } from '../config';
@@ -119,10 +119,11 @@ describe("server notebook", function() {
 
       // Insert a top-level style with a tool style attached.
       const toolInfo: ToolInfo = { name: 'test-tool', html: "Check Equivalences", data: "tool-data" };
+      const formulaData: FormulaData = {};
       const styleProps: StylePropertiesWithSubprops = {
         role: 'FORMULA',
         type: 'FORMULA-DATA',
-        data: undefined,
+        data: formulaData,
         subprops: [
           { type: 'TOOL', role: 'ATTRIBUTE', data: toolInfo },
         ]

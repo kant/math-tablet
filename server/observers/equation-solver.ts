@@ -25,7 +25,8 @@ const debug = debug1(`server:${MODULE}`);
 
 import { NotebookChange, StyleObject,
          RelationshipObject,
-         StyleId
+         StyleId,
+         FormulaData
        } from '../../client/notebook';
 import { ToolInfo, NotebookChangeRequest, StyleInsertRequest, StylePropertiesWithSubprops,
          StyleDeleteRequest,
@@ -90,16 +91,18 @@ export class EquationSolverObserver implements ObserverInstance {
     //   relationsTo,
     // };
     debug("npv.value",nvp.value);
+    const wolframData = nvp.name + ' = ' + nvp.value;
+    const formulaData: FormulaData = { wolframData };
     const styleProps: StylePropertiesWithSubprops = {
       role: 'FORMULA',
       type: 'FORMULA-DATA',
-      data: undefined,
+      data: formulaData,
       relationsTo,
       subprops: [{
         role: 'REPRESENTATION',
         subrole: 'ALTERNATE',
         type: 'WOLFRAM',
-        data: nvp.name + ' = ' + nvp.value,
+        data: wolframData,
       }],
     };
     const changeReq: StyleInsertRequest = {

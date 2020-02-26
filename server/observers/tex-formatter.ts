@@ -17,6 +17,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// TODO: Move a lot of this functionality to the high-level formula-observer.
+
 // Requirements
 
 import * as debug1 from 'debug';

@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import debug1 from 'debug';
 
 
-import { BaseObserver, Rules } from './base-observer';
+import { BaseObserver, Rules, StyleRelation } from './base-observer';
 import { convertTeXtoWolfram, convertMathTabletLanguageToWolfram, execute, convertWolframToTeX } from '../wolframscript';
 import { ServerNotebook } from '../server-notebook';
 import { WolframData, LatexData, isEmptyOrSpaces } from '../../client/math-tablet-api';
@@ -54,20 +54,23 @@ export class WolframObserver extends BaseObserver {
   private static RULES: Rules = [
     {
       name: "tex-to-wolfram",
-      peerStyleTest: { role: 'REPRESENTATION', type: 'LATEX', notSource: 'WOLFRAM' },
+      styleTest: { role: 'REPRESENTATION', type: 'LATEX', notSource: 'WOLFRAM' },
+      styleRelation: StyleRelation.Peer,
       props: { role: 'REPRESENTATION', subrole: 'ALTERNATE', type: 'WOLFRAM' },
       computeAsync: WolframObserver.ruleConvertTexToWolfram,
     },
     {
       name: "wolfram-to-tex",
-      peerStyleTest: { role: 'REPRESENTATION', subrole: 'INPUT', type: 'WOLFRAM' },
+      styleTest: { role: 'REPRESENTATION', subrole: 'INPUT', type: 'WOLFRAM' },
+      styleRelation: StyleRelation.Peer,
       props: { role: 'REPRESENTATION', subrole: 'ALTERNATE', type: 'LATEX' },
       computeAsync: WolframObserver.ruleConvertWolframToTex,
     },
     {
       name: "evaluate-wolfram",
       // REVIEW: Should evaluation be attached to FORMULA, rather than REPRESENTATION?
-      parentStyleTest: { role: 'REPRESENTATION', type: 'WOLFRAM' },
+      styleTest: { role: 'REPRESENTATION', type: 'WOLFRAM' },
+      styleRelation: StyleRelation.Parent,
       props: { role: 'EVALUATION', type: 'WOLFRAM' },
       computeAsync: WolframObserver.ruleEvaluateWolframExpr,
     },
