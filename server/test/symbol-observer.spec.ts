@@ -463,7 +463,7 @@ describe("test symbol observer", function() {
       };
       await serializeChangeRequests(notebook, [moveRequest]);
 
-      console.dir(notebook);
+      console.log(notebook.toText());
 
       const rel_r =  notebook.allRelationships();
       const rel_recomp = notebook.recomputeAllSymbolRelationships();
@@ -472,12 +472,9 @@ describe("test symbol observer", function() {
       const rsos = constructMapRelations(notebook, rel_r);
       console.dir(rsos);
 
-      // @ts-ignore
-      assert.equal(rsos.find( r => r.from == "X = 3").to, "Y = X^2");
-      // @ts-ignore
-      assert.equal(rsos.find( r => r.from == "X = 4").to, "X = 3");
-      // @ts-ignore
-      assert.equal(rsos.find( r => r.from == "A = 4").to, "B = A^2");
+      assert.equal(rsos.find( r => r.from == "X = 3")!.to, "Y = X^2");
+      assert.equal(rsos.find( r => r.from == "X = 4")!.to, "X = 3");
+      assert.equal(rsos.find( r => r.from == "A = 4")!.to, "B = A^2");
     });
 
     it("A change correctly updates all relationships",async function(){

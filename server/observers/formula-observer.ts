@@ -80,7 +80,7 @@ export class FormulaObserver extends BaseObserver {
         subrole: 'ALTERNATE',
         type: 'WOLFRAM',
       },
-      computeSync: FormulaObserver.renderFormulaToWolfram,
+      computeSync: FormulaObserver.renderFormulaToWolframRepresentation,
     },
   ];
 
@@ -90,7 +90,7 @@ export class FormulaObserver extends BaseObserver {
     return { wolframData };
   }
 
-  private static renderFormulaToWolfram(formulaData: FormulaData): WolframData|undefined {
+  private static renderFormulaToWolframRepresentation(formulaData: FormulaData): WolframData|undefined {
     return formulaData.wolframData;
   }
 
