@@ -63,7 +63,7 @@ export class MyScriptObserver extends BaseObserver {
     {
       name: "strokes-to-latex",
       styleTest: { role: 'REPRESENTATION', type: 'STROKES' },
-      styleRelation: StyleRelation.Peer,
+      styleRelation: StyleRelation.PeerToPeer,
       props: { role: 'REPRESENTATION', subrole: 'ALTERNATE', type: 'LATEX' },
       computeAsync: MyScriptObserver.ruleConvertStrokesToLatex,
     },

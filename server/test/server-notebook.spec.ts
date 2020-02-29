@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // import * as debug1 from 'debug';
 // const MODULE = __filename.split(/[/\\]/).slice(-1)[0].slice(0,-3);
-// const debug = debug1(`server:${MODULE}`);
+// const debug = debug1(`tests:${MODULE}`);
 import { assert } from 'chai';
 import 'mocha';
 import * as sinon from 'sinon';
@@ -31,9 +31,12 @@ import { NotebookChangeRequest, StyleInsertRequest, StylePropertiesWithSubprops,
 import { ServerNotebook, ObserverInstance }  from '../server-notebook';
 import { Config } from '../config';
 
-// Test Observer
+import { ensureGlobalLoaded } from './global';
+ensureGlobalLoaded();
 
-export class TestObserver implements ObserverInstance {
+// Test Observer Class
+
+class TestObserver implements ObserverInstance {
   static async initialize(_config: Config): Promise<void> { }
   static async onOpen(_notebook: ServerNotebook): Promise<TestObserver> { return new this(); }
   constructor() {}
@@ -153,3 +156,4 @@ describe("server notebook", function() {
     });
   });
 });
+

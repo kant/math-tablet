@@ -21,149 +21,39 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // import * as debug1 from 'debug';
 // const MODULE = __filename.split(/[/\\]/).slice(-1)[0].slice(0,-3);
-// const debug = debug1(`server:${MODULE}`);
+// const debug = debug1(`tests:${MODULE}`);
 import { assert } from 'chai';
 import 'mocha';
 // import * as sinon from 'sinon';
 
-import { NotebookChange,  StyleObject, RelationshipObject,
-         StyleId
+import { RelationshipObject,
+         StyleId,
+         FormulaData
        } from '../../client/notebook';
 import { NotebookChangeRequest, StyleInsertRequest,
          StyleChangeRequest,
+         WolframData,
          //         StyleMoveRequest,
          //         StyleDeleteRequest,
          //        StylePropertiesWithSubprops
        } from '../../client/math-tablet-api';
-import { ServerNotebook, ObserverInstance }  from '../server-notebook';
+import { ServerNotebook }  from '../server-notebook';
 
-import { SymbolClassifierObserver } from '../observers/symbol-classifier';
-// import { EquationSolverObserver } from '../observers/equation-solver';
-import { MathematicaObserver } from '../observers/mathematica-cas';
-import { AlgebraicToolsObserver } from '../observers/algebraic-tools';
-// import { TeXFormatterObserver } from '../observers/tex-formatter';
-import { AnyInputObserver } from '../observers/any-input';
-import { WolframObserver } from '../observers/wolfram-cas';
-import { start as startWolframscript } from '../wolframscript';
-import { Config, loadConfig } from '../config';
-
-// Test Observer
-
-export class TestObserver implements ObserverInstance {
-  static async initialize(_config: Config): Promise<void> { }
-  static async onOpen(_notebook: ServerNotebook): Promise<TestObserver> { return new this(); }
-  constructor() {}
-  async onChangesAsync(_changes: NotebookChange[]): Promise<NotebookChangeRequest[]> { return []; }
-  public onChangesSync(_changes: NotebookChange[]): NotebookChangeRequest[] { return []; }
-  async onClose(): Promise<void> {}
-  async useTool(_style: StyleObject): Promise<NotebookChangeRequest[]> { return []; }
-}
+import { ensureGlobalLoaded } from './global';
+ensureGlobalLoaded();
 
 // Unit Tests
-// This is likely to be needed, so I am retaining at the early stage of writing this file -rlr
-// @ts-ignore
-async function serializeChangeRequests(notebook: ServerNotebook,
-                                 changes: NotebookChangeRequest[]) {
-  for(const cr of changes) {
-      await notebook.requestChanges('TEST', [cr]);
-  }
-}
-
-function generateInsertRequests(inputs :string[]) : StyleInsertRequest[] {
-  var reqs : StyleInsertRequest[] = [];
-  for(const i of inputs) {
-    reqs.push( { type: 'insertStyle',
-            styleProps: { role: 'REPRESENTATION', type: 'WOLFRAM', data: i } }
-        );
-  }
-  return reqs;
-}
-
-interface RelationshipStringObject {
-  from: string;
-  to: string;
-}
-
-// This is likely to be needed, so I am retaining at the early stage of writing this file -rlr
-// @ts-ignore
-function constructMapRelations(notebook: ServerNotebook,
-                               rs : RelationshipObject[]) :RelationshipStringObject[] {
-  return rs.map(r => {
-    const frS = notebook.getStyle(r.fromId);
-    const frTS = notebook.topLevelStyleOf(frS.id);
-    const toS = notebook.getStyle(r.toId);
-    const toTS = notebook.topLevelStyleOf(toS.id);
-    return { from: frTS.data, to: toTS.data};
-  });
-}
-
-// This is likely to be needed, so I am retaining at the early stage of writing this file -rlr
-// @ts-ignore
-function getThought(notebook : ServerNotebook,n : number) : StyleId {
-  const tls = notebook.topLevelStyleOrder();
-  const thoughtId = tls.slice(n)[0];
-  return thoughtId;
-}
-
-// This is likely to be needed, so I am retaining at the early stage of writing this file -rlr
-// @ts-ignore
-//const insertRequest:StyleInsertRequest[] = generateInsertRequests(data);
-
 
 describe("test relationships", function() {
   let notebook: ServerNotebook;
 
-
-  before("correctly configure stuff", async function(){
-    // We can't do this test if we don't have mathematica
-    const config = await loadConfig();
-
-    // TODO: stopWolframscript before exiting.
-    if (config.mathematica) { await startWolframscript(config.wolframscript); }
-
-    if (config.mathematica) {
-      await MathematicaObserver.initialize(config);
-    } else {
-    }
-
-
-
-  });
-
-
-  beforeEach("Reinitialize notebook",async function(){
-    // Create a notebook
+  beforeEach(async function(){
     notebook = await ServerNotebook.createAnonymous();
-
-    // Register the observer
-    const testObserver = await TestObserver.onOpen(notebook);
-    const symbolClassifierObserver = await SymbolClassifierObserver.onOpen(notebook);
-    const mathematicaObserver = await MathematicaObserver.onOpen(notebook);
-//    const equationSolverObserver = await EquationSolverObserver.onOpen(notebook);
-//    const teXFormatterObserver = await TeXFormatterObserver.onOpen(notebook);
-    const anyInputObserver = await AnyInputObserver.onOpen(notebook);
-    const wolframObserver = await WolframObserver.onOpen(notebook);
-    const algebraicToolsObserver = await AlgebraicToolsObserver.onOpen(notebook);
-
-    notebook.registerObserver('TEST', testObserver);
-    notebook.registerObserver('SYMBOL-CLASSIFIER', symbolClassifierObserver);
-    notebook.registerObserver('MATHEMATICA', mathematicaObserver);
-//    notebook.registerObserver('EQUATION-SOLVER', equationSolverObserver);
-    //    notebook.registerObserver('TEX-FORMATTER', teXFormatterObserver);
-    notebook.registerObserver('ALGEBRAIC-TOOLS', algebraicToolsObserver);
-    notebook.registerObserver('ANY-INPUT', anyInputObserver);
-    notebook.registerObserver('WOLFRAM', wolframObserver);
-
   });
-  afterEach("Close notebook",async function(){
-    // Close the notebook.
+
+  afterEach(async function(){
     await notebook.close();
   });
-
-  after("onClose is called when notebook is closed", async function(){
-
-  });
-
 
   describe("relationships support changes", function(){
 
@@ -181,9 +71,7 @@ describe("test relationships", function() {
     // that the forumalae and hints are correctly marked as changed.
 
     it("Can derive formulae then propagate a change", async function(){
-      const data:string[] = [
-        "x + x^2",
-        "2*x + 2*x^2"];
+      const data:string[] = [ "x + x^2", "2*x + 2*x^2"];
       const changeRequests = generateInsertRequests(data);
       await notebook.requestChanges('TEST', [changeRequests[0]]);
       const F1 = notebook.topLevelStyleOf(1);
@@ -237,3 +125,55 @@ describe("test relationships", function() {
     });
   });
 });
+
+// Helper Functions
+
+// This is likely to be needed, so I am retaining at the early stage of writing this file -rlr
+// @ts-ignore
+async function serializeChangeRequests(notebook: ServerNotebook,
+  changes: NotebookChangeRequest[]) {
+for(const cr of changes) {
+await notebook.requestChanges('TEST', [cr]);
+}
+}
+
+function generateInsertRequests(inputs: WolframData[]): StyleInsertRequest[] {
+return inputs.map(wolframData=>{
+const data: FormulaData = { wolframData };
+const request: StyleInsertRequest = {
+type: 'insertStyle',
+styleProps: { role: 'REPRESENTATION', type: 'WOLFRAM', data },
+};
+return request;
+});
+}
+
+interface RelationshipStringObject {
+from: string;
+to: string;
+}
+
+// This is likely to be needed, so I am retaining at the early stage of writing this file -rlr
+// @ts-ignore
+function constructMapRelations(notebook: ServerNotebook,
+rs : RelationshipObject[]) :RelationshipStringObject[] {
+return rs.map(r => {
+const frS = notebook.getStyle(r.fromId);
+const frTS = notebook.topLevelStyleOf(frS.id);
+const toS = notebook.getStyle(r.toId);
+const toTS = notebook.topLevelStyleOf(toS.id);
+return { from: frTS.data, to: toTS.data};
+});
+}
+
+// This is likely to be needed, so I am retaining at the early stage of writing this file -rlr
+// @ts-ignore
+function getThought(notebook : ServerNotebook,n : number) : StyleId {
+const tls = notebook.topLevelStyleOrder();
+const thoughtId = tls.slice(n)[0];
+return thoughtId;
+}
+
+// This is likely to be needed, so I am retaining at the early stage of writing this file -rlr
+// @ts-ignore
+//const insertRequest:StyleInsertRequest[] = generateInsertRequests(data);

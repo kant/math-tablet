@@ -147,7 +147,7 @@ export abstract class DataflowObserver implements ObserverInstance {
           break;
         }
         default:
-          debug(` Ignoring ${change.type}: ${JSON.stringify(change)}`);
+          // debug(` Ignoring ${change.type}: ${JSON.stringify(change)}`);
           break;
       }
     }

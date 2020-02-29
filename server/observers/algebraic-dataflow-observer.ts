@@ -85,6 +85,7 @@ export class AlgebraicDataflowObserver extends DataflowObserver {
     };
 
     try {
+      debug(`Executing: ${substituted}`);
       const transformed = await execute(substituted);
 
       dfvs.push({

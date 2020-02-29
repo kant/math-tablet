@@ -26,13 +26,11 @@ const debug = debug1(`server:${MODULE}`);
 import { StyleType,NotebookChange, StyleObject,
          RelationshipObject,
          RelationshipProperties,
-         FindRelationshipOptions,
          HintData, HintRelationship, HintStatus, FormulaData} from '../../client/notebook';
-import { ToolInfo, NotebookChangeRequest, StyleInsertRequest, StyleDeleteRequest, StylePropertiesWithSubprops, WolframData,
-         ToolData,RelationshipInsertRequest,
-//         RelationshipDeleteRequest,
-         StyleChangeRequest,
-       } from '../../client/math-tablet-api';
+import {
+  ToolInfo, NotebookChangeRequest, StyleInsertRequest, StyleDeleteRequest, StylePropertiesWithSubprops, WolframData,
+  ToolData,RelationshipInsertRequest,
+} from '../../client/math-tablet-api';
 
 import {
   DataflowStatus,
@@ -133,16 +131,6 @@ export class AlgebraicToolsObserver implements ObserverInstance {
     //   role: 'FORMULA',
     //   type: 'FORMULA-DATA',
     //   data: { wolframData: toolData.output },
-    //   subprops: [{
-    //     id: toId,
-    //     role: 'REPRESENTATION',
-    //     type: 'WOLFRAM',
-    //     data: toolData.output,
-    //     subrole: 'INPUT',
-    //     // REVIEW: Possibly this should be 'FACTORIZATION'
-    //     // or some other meaning. 'INPUT' is a stop-gap
-    //     // to work with the current GUI.
-    //   }],
     //   relationsFrom: {
     //     [fromId]: { role: 'TRANSFORMATION',
     //                 data: toolData,
@@ -152,19 +140,10 @@ export class AlgebraicToolsObserver implements ObserverInstance {
 
     const formulaData: FormulaData = { wolframData: toolData.output };
     const styleProps: StylePropertiesWithSubprops = {
+      id: toId,
       role: 'FORMULA',
       type: 'FORMULA-DATA',
       data: formulaData,
-      subprops: [{
-        id: toId,
-        role: 'REPRESENTATION',
-        type: 'WOLFRAM',
-        data: toolData.output,
-        subrole: 'INPUT',
-        // REVIEW: Possibly this should be 'FACTORIZATION'
-        // or some other meaning. 'INPUT' is a stop-gap
-        // to work with the current GUI.
-      }],
     };
 
     const changeReq: StyleInsertRequest = {
@@ -221,10 +200,6 @@ export class AlgebraicToolsObserver implements ObserverInstance {
         break;
       }
       case 'styleChanged': {
-        // Although this will be part of a higher-level API later,
-        // I am faking it here for the purpose of testing..
-        // his.checkUserInputChangeRule(change.style, rval);
-        // await this.fakeDataFlowStyleChangeRule(change.style, rval);
         //        await this.algebraicToolsStyleChangeRule(change.style, rval);
         break;
       }
@@ -380,117 +355,6 @@ export class AlgebraicToolsObserver implements ObserverInstance {
                        (s : string) => `Apart: ${s}`,
                        (s : string) => `\\text{Apart: } ${s}`);
   }
-
-  // This is a mechanism of calling the function
-  // that we hope to call from the more abstract API.
-  // It is therefore a temporary scaffold.
-  // TODO: REMOVE
-  // @ts-ignore
-  private async fakeDataFlowStyleChangeRule(style: StyleObject, rval: NotebookChangeRequest[]): Promise<void> {
-
-    // Possibly if we are not an evaluation we should do something else,
-    // like a simple recalculcaiton, but I will delay that.
-    debug("XXXXXXXXXX style",style);
-    if (style.role != 'EVALUATION') {
-      return;
-    } else {
-
-      // It is unclear how we will handle the changes of the tools
-      // in this case, which still must be accomplished.
-      // I believe this will require separate action...
-      this.removeAllOffspringOfType(style,rval,'TOOL');
-      await this.algebraicToolsStyleInsertRule(style, rval);
-
-
-      // The relationship will be tied to the Representation
-
-      // I think all of the above is correct, but now we wish to see
-      // if any relationships against that force us to
-      // First, we want to find all TRANSFORM relations that have
-      // a To clause mathing this style. They must be marked unverified.
-
-      // Transformation relationships appear to be between top level styles...
-      // We have to find based on the top level formula
-      // WARNING UGLY HACK CODE (DUPLICATION OF ABOVE)
-      const origin_top = this.notebook.topLevelStyleOf(style.id);
-
-      var fromId : number;
-      if (origin_top.role == 'FORMULA' && origin_top.type == 'FORMULA-DATA') {
-        fromId = origin_top.id;
-      } else {
-        fromId = this.notebook.findStyle({role: 'FORMULA', type: 'FORMULA-DATA',recursive: true },
-                                         origin_top!.id)!.id;
-      }
-      const relOp : FindRelationshipOptions = {
-        fromId: fromId,
-        role: 'TRANSFORMATION' };
-
-
-      const relsInPlace : RelationshipObject[] = this.notebook.findRelationships(relOp);
-
-      for(var i = 0; i < relsInPlace.length; i++) {
-        var r = relsInPlace[i];
-        // We have a bug unrelated to this code (I think) where by old
-        // relationships are not being removed. I therefore check validity here;
-        // but we must track down how this is coming about.
-        if (!this.notebook.hasStyle({},r.toId)
-            ||
-            !this.notebook.hasStyle({},r.fromId)
-           ) {
-          debug("Discarding relation: ", r);
-          console.error("Found invalid relation: ",r);
-          continue;
-        }
-
-
-        // We will call dependentChangeRule once for each
-        // relation r. We artificially now construct input values.
-        // Using special knowledge of this transform, this is easy enough.
-        var dfv : DataflowValue[] = [];
-        // First is the formula
-        debug("DATA DATA DATA",style);
-        dfv.push({ status: DataflowStatus.Changed,
-                   message: 'CHANGED',
-                   value: style.data });
-
-        // Second is the Tool/Transform
-        dfv.push({ status: DataflowStatus.Changed,
-                   message: 'UNCHANGED',
-                   value: r.data });
-
-        const result = await this.dependentChangeRule(r,dfv);
-        // We now may enter a request change for the second formula and hint
-
-        const cr: StyleChangeRequest = {
-          type: 'changeStyle',
-          styleId: r.toId,
-          data: result[0].value,
-        };
-        rval.push(cr);
-
-        const data: HintData = {
-          relationship: HintRelationship.Equivalent,
-          status: HintStatus.Correct,
-          idOfRelationshipDecorated: r.id
-        };
-
-        // In order to load this, we must find the HINT matching this relation
-        const hintStyles = this.notebook.findStyles(
-          { role: 'HINT', recursive: true}
-        );
-
-        var hintStyle = hintStyles.find( f => f.data.idOfRelationshipDecorated == r.id);
-
-        const hintReq: StyleChangeRequest = {
-          styleId: hintStyle!.id,
-          type: 'changeStyle',
-          data,
-        };
-        rval.push(hintReq);
-      }
-    }
-  }
-
 
   // RLR attempts here to create a change function
   // to be used by the high-level API...

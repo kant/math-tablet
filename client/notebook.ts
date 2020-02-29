@@ -291,7 +291,7 @@ export const STYLE_SUBROLES = [
   'UNKNOWN',
 
   // REPRESENTATION subroles
-  'INPUT',          // TODO: Rename to 'PRIMARY'
+  'INPUT',
   'ALTERNATE',
 ];
 export type StyleSubrole = typeof STYLE_SUBROLES[number];
@@ -334,7 +334,7 @@ export const STYLE_SOURCES = [
   'SYSTEM',           // The Math-Tablet app itself, not the user or an observer.
   'TEST',             // An example source used only by our test system
   'USER',             // Directly entered by user
-  'WOLFRAM',          // Wolfram C.A.S.
+  'WOLFRAM-OBSERVER', // Wolfram C.A.S.
 ] as const;
 export type StyleSource = typeof STYLE_SOURCES[number];
 

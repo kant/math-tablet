@@ -131,6 +131,11 @@ export class ServerNotebook extends Notebook {
     return notebook;
   }
 
+  public static deregisterObserver(source: StyleSource): void {
+    debug(`Deregistering observer: ${source}`);
+    this.observerClasses.delete(source);
+  }
+
   public static async open(notebookPath: NotebookPath): Promise<ServerNotebook> {
     // If the document is already open, then return the existing instance.
     const openNotebook = this.persistentNotebooks.get(notebookPath);
