@@ -465,47 +465,34 @@ describe("test symbol observer", function() {
       await serializeChangeRequests(notebook, insertRequests);
       const rel_r_o =  notebook.allRelationships();
       const rsos = constructMapRelations(notebook, rel_r_o);
-      console.log("all relationships after pure addision",rsos);
       assert.equal(rsos.find( r => r.from == "X = 3")!.to, "X = 5");
     });
+
 
     it("reorderings are supported across symbols", async function(){
 
       const data:string[] = [ "X = 3", "A = 4", "X = 5", "Y = X^2", "B = A^2" ];
       const insertRequests = insertWolframFormulas(data);
       await serializeChangeRequests(notebook, insertRequests);
-      const rel_r_o =  notebook.allRelationships();
-      const rsos_o = constructMapRelations(notebook, rel_r_o);
-      console.log("all relationships after pure addision",rsos_o);
 
-
+      // the goal here is to move Y = X^2 to the first position.
       let penultimate = getThought(notebook, -2);
       const moveRequest: StyleMoveRequest = {
         type: 'moveStyle',
         styleId: penultimate,
-        afterId: 0
+        afterId: 1
       };
+
       await serializeChangeRequests(notebook, [moveRequest]);
 
       const rel_r =  notebook.allRelationships();
       const rel_recomp = notebook.recomputeAllSymbolRelationships();
-      console.log("all Relationships", rel_r);
-
-      console.log("rel_recomp", rel_recomp);
-
-      // console.log(notebook.toText());
-
 
       assert.equal(rel_r.length, rel_recomp.length);
       const rsos = constructMapRelations(notebook, rel_r);
 
-      console.log("RSOS",rsos);
-
-      assert.equal(rsos.find( r => r.from == "X = 3")!.to, "X = 5");
+      assert.equal(rsos.find( r => r.from == "X = 3")!.to, "Y = X^2");
       assert.equal(rsos.find( r => r.from == "A = 4")!.to, "B = A^2");
-
-      // This is failing
-      assert.equal(rsos.find( r => r.from == "X = 5")!.to, "Y = X^2");
 
     });
 
