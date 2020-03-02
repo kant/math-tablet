@@ -232,7 +232,7 @@ describe("test symbol observer", function() {
       const cr: StyleChangeRequest = {
         type: 'changeStyle',
         styleId: fromId,
-        data: { wolfranData: "X = 5"},
+        data: { wolframData: "X = 5"},
       };
       await serializeChangeRequests(notebook,[cr]);
 
@@ -256,7 +256,7 @@ describe("test symbol observer", function() {
       const cr: StyleChangeRequest = {
         type: 'changeStyle',
         styleId: fromId,
-        data: { wolfranData: "X = 5"},
+        data: { wolframData: "X = 5"},
       };
       await serializeChangeRequests(notebook,[cr]);
 
@@ -458,13 +458,28 @@ describe("test symbol observer", function() {
                    rel_recomp.length);
     });
 
-    it("reorderings are supported across symbols", async function(){
+    it("multiple formulae are handled correctly", async function(){
 
-      const data:string[] = [ "X = 3", "A = 4", "X = 4", "Y = X^2", "B = A^2" ];
+      const data:string[] = [ "X = 3", "A = 4", "X = 5", "Y = X^2", "B = A^2" ];
       const insertRequests = insertWolframFormulas(data);
       await serializeChangeRequests(notebook, insertRequests);
+      const rel_r_o =  notebook.allRelationships();
+      const rsos = constructMapRelations(notebook, rel_r_o);
+      console.log("all relationships after pure addision",rsos);
+      assert.equal(rsos.find( r => r.from == "X = 3")!.to, "X = 5");
+    });
 
-      let penultimate = getThought(notebook, 2);
+    it("reorderings are supported across symbols", async function(){
+
+      const data:string[] = [ "X = 3", "A = 4", "X = 5", "Y = X^2", "B = A^2" ];
+      const insertRequests = insertWolframFormulas(data);
+      await serializeChangeRequests(notebook, insertRequests);
+      const rel_r_o =  notebook.allRelationships();
+      const rsos_o = constructMapRelations(notebook, rel_r_o);
+      console.log("all relationships after pure addision",rsos_o);
+
+
+      let penultimate = getThought(notebook, -2);
       const moveRequest: StyleMoveRequest = {
         type: 'moveStyle',
         styleId: penultimate,
@@ -474,14 +489,24 @@ describe("test symbol observer", function() {
 
       const rel_r =  notebook.allRelationships();
       const rel_recomp = notebook.recomputeAllSymbolRelationships();
+      console.log("all Relationships", rel_r);
+
+      console.log("rel_recomp", rel_recomp);
+
+      // console.log(notebook.toText());
+
 
       assert.equal(rel_r.length, rel_recomp.length);
       const rsos = constructMapRelations(notebook, rel_r);
-      console.dir(rsos);
 
-      assert.equal(rsos.find( r => r.from == "X = 3")!.to, "Y = X^2");
-      assert.equal(rsos.find( r => r.from == "X = 4")!.to, "X = 3");
+      console.log("RSOS",rsos);
+
+      assert.equal(rsos.find( r => r.from == "X = 3")!.to, "X = 5");
       assert.equal(rsos.find( r => r.from == "A = 4")!.to, "B = A^2");
+
+      // This is failing
+      assert.equal(rsos.find( r => r.from == "X = 5")!.to, "Y = X^2");
+
     });
 
     it("A change correctly updates all relationships",async function(){
@@ -505,10 +530,11 @@ describe("test symbol observer", function() {
       const cr: StyleChangeRequest = {
         type: 'changeStyle',
         styleId: initialId,
-        data: { wolfranData: data1[0] } ,
+        data: { wolframData: data1[0] } ,
       };
 
       await serializeChangeRequests(notebook,[cr]);
+
       const rel_r = notebook.allRelationships();
 
       assert.equal(rel_r.length,1);
