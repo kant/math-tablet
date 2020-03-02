@@ -472,8 +472,6 @@ describe("test symbol observer", function() {
       };
       await serializeChangeRequests(notebook, [moveRequest]);
 
-      console.log(notebook.toText());
-
       const rel_r =  notebook.allRelationships();
       const rel_recomp = notebook.recomputeAllSymbolRelationships();
 
@@ -510,14 +508,8 @@ describe("test symbol observer", function() {
         data: { wolfranData: data1[0] } ,
       };
 
-      console.log(notebook.toText());
-
       await serializeChangeRequests(notebook,[cr]);
-
-      console.log(notebook.toText());
-
       const rel_r = notebook.allRelationships();
-      console.log(rel_r);
 
       assert.equal(rel_r.length,1);
     });
@@ -537,18 +529,13 @@ describe("test symbol observer", function() {
         assert.equal(true,false,"topformula not found");
       }
       const initialId = topformula!.id;
-      console.log(notebook.toText());
       const cr: StyleChangeRequest = {
         type: 'changeStyle',
         styleId: initialId,
         data: { wolframData:  data1[0]},
       };
 
-      console.log(notebook.toText());
       await serializeChangeRequests(notebook,[cr]);
-
-      console.log("initialId", initialId);
-      console.log(notebook.toText());
 
 
       // Now there should be only ONE EQUATION-DEFINITON attached to the single input!!!
@@ -634,14 +621,18 @@ function texformatOfLastThought(notebook : ServerNotebook) : string {
   // now that we have the lastThought, we want to get the
   // LATEX type...
   const lastThought = notebook.getStyle(lastThoughtId);
+
   // REVIEW: Does this search need to be recursive?
   const texformatter = notebook.findStyle({ type: 'TEX-EXPRESSION', recursive: true }, lastThought.id);
   return texformatter!.data;
 }
 
+// Note: i is allowed to be negative, to use the javascript
+// convention of negatives counting from the back of the array.
 function getThought(notebook: ServerNotebook, i: number): StyleId {
 //  assert(i>=0);
   const tls = notebook.topLevelStyleOrder();
+  const idx = (i < 0) ?  (tls.length + i) : i;
   assert(i<tls.length);
-  return tls[i];
+  return tls[idx];
 }
