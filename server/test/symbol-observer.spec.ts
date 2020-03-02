@@ -169,7 +169,7 @@ describe("test symbol observer", function() {
       await serializeChangeRequests(notebook,changeRequests);
 //      await notebook.requestChanges('TEST', changeRequests);
       const style = notebook.topLevelStyleOf(1);
-      assert.deepEqual(style.type,'WOLFRAM-EXPRESSION');
+      assert.deepEqual(style.type,'FORMULA-DATA');
 
       assert.equal(notebook.allRelationships().length,1);
       const deleteReq : StyleDeleteRequest = { type: 'deleteStyle',
@@ -191,7 +191,7 @@ describe("test symbol observer", function() {
       await notebook.requestChanges('TEST', changeRequests1);
 
       const style = notebook.topLevelStyleOf(1);
-      assert.deepEqual(style.type,'WOLFRAM-EXPRESSION');
+      assert.deepEqual(style.type,'FORMULA-DATA');
       assert.equal(notebook.allRelationships().length,2);
       // We want to check that the relaionship is "duplicate def".
       const r : RelationshipObject = notebook.allRelationships()[0];
@@ -232,7 +232,7 @@ describe("test symbol observer", function() {
       const cr: StyleChangeRequest = {
         type: 'changeStyle',
         styleId: fromId,
-        data: "X = 5",
+        data: { wolfranData: "X = 5"},
       };
       await serializeChangeRequests(notebook,[cr]);
 
@@ -256,7 +256,7 @@ describe("test symbol observer", function() {
       const cr: StyleChangeRequest = {
         type: 'changeStyle',
         styleId: fromId,
-        data: "X = 5",
+        data: { wolfranData: "X = 5"},
       };
       await serializeChangeRequests(notebook,[cr]);
 
@@ -497,22 +497,33 @@ describe("test symbol observer", function() {
       const changeRequests = insertWolframFormulas(data0);
       await serializeChangeRequests(notebook,changeRequests);
       // I really want a way to find this from the notebook....
-      const initialId = 1;
+
+      const formulas = notebook.findStyles({ type: 'FORMULA-DATA', recursive: true });
+      assert.equal(formulas.length,2);
+
+      const first_formula = formulas[0];
+      const initialId = first_formula!.id;
 
       const cr: StyleChangeRequest = {
         type: 'changeStyle',
         styleId: initialId,
-        data: data1[0],
+        data: { wolfranData: data1[0] } ,
       };
 
+      console.log(notebook.toText());
+
       await serializeChangeRequests(notebook,[cr]);
+
+      console.log(notebook.toText());
+
       const rel_r = notebook.allRelationships();
+      console.log(rel_r);
 
       assert.equal(rel_r.length,1);
     });
 
     it("A change of an equation produces only one equation, not two",async function(){
-      const data0:string[] = [
+       const data0:string[] = [
         "3x - 10 = 11",
         ];
       const data1:string[] = [
@@ -520,15 +531,26 @@ describe("test symbol observer", function() {
         ];
       const changeRequests = insertWolframFormulas(data0);
       await serializeChangeRequests(notebook,changeRequests);
-      // I really want a way to find this from the notebook....
-      const initialId = 1;
 
+      const topformula = notebook.findStyle({ type: 'FORMULA-DATA', recursive: true});
+      if (!topformula) {
+        assert.equal(true,false,"topformula not found");
+      }
+      const initialId = topformula!.id;
+      console.log(notebook.toText());
       const cr: StyleChangeRequest = {
         type: 'changeStyle',
         styleId: initialId,
-        data: data1[0],
+        data: { wolframData:  data1[0]},
       };
+
+      console.log(notebook.toText());
       await serializeChangeRequests(notebook,[cr]);
+
+      console.log("initialId", initialId);
+      console.log(notebook.toText());
+
+
       // Now there should be only ONE EQUATION-DEFINITON attached to the single input!!!
       // REVIEW: Does this search need to be recursive?
       const children = notebook.findStyles({ type: 'EQUATION-DATA', recursive: true }, initialId);
@@ -618,7 +640,7 @@ function texformatOfLastThought(notebook : ServerNotebook) : string {
 }
 
 function getThought(notebook: ServerNotebook, i: number): StyleId {
-  assert(i>=0);
+//  assert(i>=0);
   const tls = notebook.topLevelStyleOrder();
   assert(i<tls.length);
   return tls[i];
