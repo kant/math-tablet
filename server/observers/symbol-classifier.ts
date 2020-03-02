@@ -354,6 +354,7 @@ export class SymbolClassifierObserver implements ObserverInstance {
       tlStyle = this.notebook.topLevelStyleOf(style.id);
     } catch (e) { // If we can't find a topLevelStyle, we have in
       // inconsistency most likely caused by concurrency in some way
+      debug(this.notebook.toText());
       console.log("error",e);
     }
     if (!tlStyle) return rval;
@@ -894,7 +895,8 @@ export class SymbolClassifierObserver implements ObserverInstance {
   }
   private async  addSymbolUseStyles(style: StyleObject, rval: NotebookChangeRequest[]): Promise<void> {
     await this.removeAllCurrentUses(style,rval);
-    await this.addSymbolUseStylesFromString(style.data, style, rval);
+    const data : string = (style.data.wolframData) ? style.data.wolframData : style.data;
+    await this.addSymbolUseStylesFromString(data, style, rval);
   }
 
   private async  addSymbolUseStylesFromString(data: string,style: StyleObject, rval: NotebookChangeRequest[]): Promise<void> {

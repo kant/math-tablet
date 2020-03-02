@@ -126,14 +126,24 @@ export class MathematicaObserver implements ObserverInstance {
   private async checkEquivalenceRule(style: StyleObject): Promise<NotebookChangeRequest[]> {
     if (style.type != 'WOLFRAM') { return []; }
 
-    if (isEmptyOrSpaces(style.data)) { return []; }
+    debug("style in check equivalence rule",style);
+
+
+    const data_s : string =
+      style.data.wolframData ? style.data.wolframData : style.data;
+//    if (style.role == 'FORMULA') {
+//      data = style.data.wolframData;
+//    } else {
+//      data = style.data;
+//    }
+    if (isEmptyOrSpaces(data_s)) { return []; }
 
     const rval: NotebookChangeRequest[] = [];
 
     try {
       const substitutions : NVPair[] = this.getSubstitutionsForStyle(style);
       const sub_expr =
-        constructSubstitution(style.data,
+        constructSubstitution(data_s,
                               substitutions);
 
       debug("sustitutions",substitutions);
@@ -156,7 +166,7 @@ export class MathematicaObserver implements ObserverInstance {
 
       const expressionEquivalence : StyleIdToBooleanMap = {};
       const sub_expr1 =
-        constructSubstitution(style.data,substitutions);
+        constructSubstitution(data_s,substitutions);
       for (var exp of expressions) {
         const expressID : number = exp.id;
         try {

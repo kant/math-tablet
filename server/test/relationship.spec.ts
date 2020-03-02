@@ -75,7 +75,7 @@ describe("test relationships", function() {
       const changeRequests = generateInsertRequests(data);
       await notebook.requestChanges('TEST', [changeRequests[0]]);
       const F1 = notebook.topLevelStyleOf(1);
-      assert.deepEqual(F1.type,'WOLFRAM');
+      assert.deepEqual(F1.type,'FORMULA-DATA');
 
       const F1_wolfram = notebook.findStyle({ type: 'WOLFRAM', role: 'EVALUATION', recursive: true }, F1.id);
 
@@ -142,7 +142,8 @@ return inputs.map(wolframData=>{
 const data: FormulaData = { wolframData };
 const request: StyleInsertRequest = {
 type: 'insertStyle',
-styleProps: { role: 'REPRESENTATION', type: 'WOLFRAM', data },
+  // styleProps: { role: 'REPRESENTATION', type: 'WOLFRAM', data },
+  styleProps: { role: 'FORMULA', type: 'FORMULA-DATA', data: {wolframData: data} },
 };
 return request;
 });

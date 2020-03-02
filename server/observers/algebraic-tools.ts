@@ -24,7 +24,7 @@ const MODULE = __filename.split(/[/\\]/).slice(-1)[0].slice(0,-3);
 const debug = debug1(`server:${MODULE}`);
 
 import { StyleType,NotebookChange, StyleObject,
-         RelationshipObject,
+//         RelationshipObject,
          RelationshipProperties,
          HintData, HintRelationship, HintStatus, FormulaData} from '../../client/notebook';
 import {
@@ -32,10 +32,10 @@ import {
   ToolData,RelationshipInsertRequest,
 } from '../../client/math-tablet-api';
 
-import {
-  DataflowStatus,
-  DataflowValue
-} from '../../server/observers/dataflow-observer';
+// import {
+//   DataflowStatus,
+//   DataflowValue
+// } from '../../server/observers/dataflow-observer';
 
 import { ServerNotebook, ObserverInstance } from '../server-notebook';
 import { execute,  convertWolframToTeX} from '../wolframscript';
@@ -96,9 +96,11 @@ export class AlgebraicToolsObserver implements ObserverInstance {
 
     const origin_top = this.notebook.topLevelStyleOf(toolInfo.origin_id!);
     var fromId : number;
+    debug("origin_top",origin_top);
     if (origin_top.role == 'FORMULA' && origin_top.type == 'FORMULA-DATA') {
       fromId = origin_top.id;
     } else {
+      debug("notebook",this.notebook.toText());
       fromId = this.notebook.findStyle({role: 'FORMULA', type: 'FORMULA-DATA',recursive: true },
                                origin_top!.id)!.id;
     }
@@ -391,135 +393,135 @@ export class AlgebraicToolsObserver implements ObserverInstance {
 
       await this.algebraicToolsStyleInsertRule(style, rval);
 
-      var fromId : number;
-      if (origin_top.role == 'FORMULA' && origin_top.type == 'FORMULA-DATA') {
-        fromId = origin_top.id;
-      } else {
-        fromId = this.notebook.findStyle({role: 'FORMULA', type: 'FORMULA-DATA',recursive: true },
-                                         origin_top!.id)!.id;
-      }
-      const relOp : FindRelationshipOptions = {
-        fromId: fromId,
-        role: 'TRANSFORMATION' };
+      // var fromId : number;
+      // if (origin_top.role == 'FORMULA' && origin_top.type == 'FORMULA-DATA') {
+      //   fromId = origin_top.id;
+      // } else {
+      //   fromId = this.notebook.findStyle({role: 'FORMULA', type: 'FORMULA-DATA',recursive: true },
+      //                                    origin_top!.id)!.id;
+      // }
+      // const relOp : FindRelationshipOptions = {
+      //   fromId: fromId,
+      //   role: 'TRANSFORMATION' };
 
 
-      const relsInPlace : RelationshipObject[] = this.notebook.findRelationships(relOp);
+      // const relsInPlace : RelationshipObject[] = this.notebook.findRelationships(relOp);
 
-      for(var i = 0; i < relsInPlace.length; i++) {
-        var r = relsInPlace[i];
-        // We have a bug unrelated to this code (I think) where by old
-        // relationships are not being removed. I therefore check validity here;
-        // but we must track down how this is coming about.
-        if (!this.notebook.hasStyle({},r.toId)
-            ||
-            !this.notebook.hasStyle({},r.fromId)
-           ) {
-          debug("Discarding relation: ", r);
-          console.error("Found invalid relation: ",r);
-          continue;
-        }
+      // for(var i = 0; i < relsInPlace.length; i++) {
+      //   var r = relsInPlace[i];
+      //   // We have a bug unrelated to this code (I think) where by old
+      //   // relationships are not being removed. I therefore check validity here;
+      //   // but we must track down how this is coming about.
+      //   if (!this.notebook.hasStyle({},r.toId)
+      //       ||
+      //       !this.notebook.hasStyle({},r.fromId)
+      //      ) {
+      //     debug("Discarding relation: ", r);
+      //     console.error("Found invalid relation: ",r);
+      //     continue;
+      //   }
 
 
-        // We will call dependentChangeRule once for each
-        // relation r. We artificially now construct input values.
-        // Using special knowledge of this transform, this is easy enough.
-        var dfv : DataflowValue[] = [];
-        // First is the formula
-        debug("DATA DATA DATA",style);
-        dfv.push({ status: DataflowStatus.Changed,
-                   message: 'CHANGED',
-                   value: style.data });
+      //   // We will call dependentChangeRule once for each
+      //   // relation r. We artificially now construct input values.
+      //   // Using special knowledge of this transform, this is easy enough.
+      //   var dfv : DataflowValue[] = [];
+      //   // First is the formula
+      //   debug("DATA DATA DATA",style);
+      //   dfv.push({ status: DataflowStatus.Changed,
+      //              message: 'CHANGED',
+      //              value: style.data });
 
-        // Second is the Tool/Transform
-        dfv.push({ status: DataflowStatus.Changed,
-                   message: 'UNCHANGED',
-                   value: r.data });
+      //   // Second is the Tool/Transform
+      //   dfv.push({ status: DataflowStatus.Changed,
+      //              message: 'UNCHANGED',
+      //              value: r.data });
 
-        const result = await this.dependentChangeRule(r,dfv);
-        // We now may enter a request change for the second formula and hint
+      //   const result = await this.dependentChangeRule(r,dfv);
+      //   // We now may enter a request change for the second formula and hint
 
-        const cr: StyleChangeRequest = {
-          type: 'changeStyle',
-          styleId: r.toId,
-          data: result[0].value,
-        };
-        rval.push(cr);
+      //   const cr: StyleChangeRequest = {
+      //     type: 'changeStyle',
+      //     styleId: r.toId,
+      //     data: result[0].value,
+      //   };
+      //   rval.push(cr);
 
-        const data: HintData = {
-          relationship: HintRelationship.Equivalent,
-          status: HintStatus.Correct,
-          idOfRelationshipDecorated: r.id
-        };
+      //   const data: HintData = {
+      //     relationship: HintRelationship.Equivalent,
+      //     status: HintStatus.Correct,
+      //     idOfRelationshipDecorated: r.id
+      //   };
 
-        // In order to load this, we must find the HINT matching this relation
-        const hintStyles = this.notebook.findStyles(
-          { role: 'HINT', recursive: true}
-        );
+      //   // In order to load this, we must find the HINT matching this relation
+      //   const hintStyles = this.notebook.findStyles(
+      //     { role: 'HINT', recursive: true}
+      //   );
 
-        var hintStyle = hintStyles.find( f => f.data.idOfRelationshipDecorated == r.id);
+      //   var hintStyle = hintStyles.find( f => f.data.idOfRelationshipDecorated == r.id);
 
-        const hintReq: StyleChangeRequest = {
-          styleId: hintStyle!.id,
-          type: 'changeStyle',
-          data,
-        };
-        rval.push(hintReq);
-      }
+      //   const hintReq: StyleChangeRequest = {
+      //     styleId: hintStyle!.id,
+      //     type: 'changeStyle',
+      //     data,
+      //   };
+      //   rval.push(hintReq);
+      //      }
     }
-  }
+}
 
 
   // RLR attempts here to create a change function
   // to be used by the high-level API...
   // @ts-ignore
-  private async dependentChangeRule(relationship: RelationshipObject,
-                                    inputValues: DataflowValue[]) : Promise<DataflowValue[]> {
+  // private async dependentChangeRule(relationship: RelationshipObject,
+  //                                   inputValues: DataflowValue[]) : Promise<DataflowValue[]> {
 
-    var dfvs: DataflowValue[] = [];
-    if (relationship.role != 'TRANSFORMATION') return dfvs;
-    // In this case (that of ALGEBRAIC-TOOLS),
-    // The outputs are only FORMULA and HINT in that order
+  //   var dfvs: DataflowValue[] = [];
+  //   if (relationship.role != 'TRANSFORMATION') return dfvs;
+  //   // In this case (that of ALGEBRAIC-TOOLS),
+  //   // The outputs are only FORMULA and HINT in that order
 
-    // TODO: When LEGACY is removed, this shall be
-    // 0, not 1.
-    const changedData = inputValues[0].value;
+  //   // TODO: When LEGACY is removed, this shall be
+  //   // 0, not 1.
+  //   const changedData = inputValues[0].value;
 
-    var substituted = relationship.data.replace('${expr}', changedData);
+  //   var substituted = relationship.data.replace('${expr}', changedData);
 
-    var hdata : HintData = {
-      relationship: HintRelationship.Equivalent,
-      status: HintStatus.Correct,
-      idOfRelationshipDecorated: relationship.id,
-    };
+  //   var hdata : HintData = {
+  //     relationship: HintRelationship.Equivalent,
+  //     status: HintStatus.Correct,
+  //     idOfRelationshipDecorated: relationship.id,
+  //   };
 
-    try {
-      const transformed = await execute(substituted);
+  //   try {
+  //     const transformed = await execute(substituted);
 
-      dfvs.push({
-        status: DataflowStatus.Changed,
-        message: 'CHANGED',
-        value: transformed
-      });
-      dfvs.push({
-        status: DataflowStatus.Changed,
-        message: 'CHANGED',
-        value: hdata,
-      });
-    } catch (e) {
-      debug("error in wolfram execution: "+substituted);
-      console.error("error in wolfram execution: "+substituted);
-      dfvs[0] = {
-        status: DataflowStatus.Invalid,
-        message: 'UNCHANGED',
-        value: changedData
-      }
-      dfvs[1] = {
-        status: DataflowStatus.Invalid,
-        message: 'UNCHANGED',
-        value: hdata,
-      }
-    }
+  //     dfvs.push({
+  //       status: DataflowStatus.Changed,
+  //       message: 'CHANGED',
+  //       value: transformed
+  //     });
+  //     dfvs.push({
+  //       status: DataflowStatus.Changed,
+  //       message: 'CHANGED',
+  //       value: hdata,
+  //     });
+  //   } catch (e) {
+  //     debug("error in wolfram execution: "+substituted);
+  //     console.error("error in wolfram execution: "+substituted);
+  //     dfvs[0] = {
+  //       status: DataflowStatus.Invalid,
+  //       message: 'UNCHANGED',
+  //       value: changedData
+  //     }
+  //     dfvs[1] = {
+  //       status: DataflowStatus.Invalid,
+  //       message: 'UNCHANGED',
+  //       value: hdata,
+  //     }
+  //   }
 
-    return dfvs;
-  }
+  //   return dfvs;
+  // }
 }
