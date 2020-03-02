@@ -26,7 +26,7 @@ import { $, configure } from './dom.js';
 import {
   DrawingData, StyleId, StyleObject, NotebookChange,
   StyleType, StyleRelativePosition,
-  StylePosition, DOCUMENT, PageId, HintData, HintStatus, HintRelationship,
+  StylePosition, DOCUMENT, PageId, HintData, HintStatus, HintRelationship, FormulaData,
 } from './notebook.js';
 import {
   StyleDeleteRequest,
@@ -394,15 +394,16 @@ export class NotebookView {
   public async insertKeyboardCellAndEdit(afterId: StyleRelativePosition): Promise<void> {
     // Shared implementation of 'insertKeyboardCellAbove' and 'insertKeyboardCellBelow'
     // Inserts a cell into the notebook, and opens it for editing.
+    // TODO: Inserting text cells, not just formula cells.
 
     // REVIEW: We shouldn't be assuming a specific HTML control on the page.
     const $typeSelector = $<HTMLSelectElement>(document, '#keyboardInputType');
 
+    const data: FormulaData = { wolframData: '' };
     const styleProps: StylePropertiesWithSubprops = {
-      // TODO: later text.
       role: 'FORMULA',
       type: 'FORMULA-DATA',
-      data: undefined,
+      data,
       subprops: [
         { role: 'REPRESENTATION', subrole: 'INPUT', type: <StyleType>$typeSelector.value, data: '' },
       ]
