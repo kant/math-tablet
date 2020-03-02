@@ -38,11 +38,11 @@ export interface RenderResult {
 // Constants
 
 const RENDERERS = new Map<StyleType, Renderer>([
-  [ 'HTML',     htmlRenderer ],
-  [ 'LATEX',    latexRenderer ],
-  [ 'MATHML',   /* TODO: */ textRenderer ],
-  [ 'TEXT',     textRenderer ],
-  [ 'WOLFRAM',  /* TODO: */ textRenderer ],
+  [ 'HTML',               htmlRenderer ],
+  [ 'TEX-EXPRESSION',     latexRenderer ],
+  [ 'MATHML-XML',         /* TODO: */ textRenderer ],
+  [ 'PLAIN-TEXT',         textRenderer ],
+  [ 'WOLFRAM-EXPRESSION', /* TODO: */ textRenderer ],
 ]);
 
 // Exported Functions

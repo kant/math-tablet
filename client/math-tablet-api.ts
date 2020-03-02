@@ -27,14 +27,14 @@ import { RelationshipProperties, StyleProperties, StyleId, NotebookChange, Noteb
 // Types
 
 export type ImageData = string;
-export type LatexData = string;
+export type LatexData = string; // TODO: Rename TexExpression
 export type MathMlData = string;
 export type MthMtcaData = string;
-export type SvgData = string;
+export type SvgData = string; // TODO: Rename SvgMarkup
 export type Symbol = string;
-export type TextData = string;
+export type TextData = string; // TODO: Rename PlainText
 export type Tracker = string; // Tracking identifier supplied by the client.
-export type WolframData = string;
+export type WolframData = string; // TODO: Rename WolframExpression
 
 export interface SymbolData {
   name: string;

@@ -164,7 +164,7 @@ export class TeXFormatterObserver implements ObserverInstance {
     // initial strategy.
     // REVIEW: Does this search need to be recursive?
     const texs : StyleObject[] =
-      this.notebook.findStyles({ type: 'LATEX', role: 'DECORATION', recursive: true }, top.id);
+      this.notebook.findStyles({ type: 'TEX-EXPRESSION', role: 'DECORATION', recursive: true }, top.id);
     const rids = new Set<number>();
     for(const itex of texs) {
       const sid : StyleId = itex.id;
@@ -192,8 +192,8 @@ export class TeXFormatterObserver implements ObserverInstance {
   // recomputation.
   private async latexFormatterRule(style: StyleObject, rval: NotebookChangeRequest[]): Promise<void> {
 
-    if (!((style.type == 'SYMBOL' && style.role == 'SYMBOL-DEFINITION')
-          || (style.type == 'EQUATION' && style.role == 'EQUATION-DEFINITION')
+    if (!((style.type == 'SYMBOL-DATA' && style.role == 'SYMBOL-DEFINITION')
+          || (style.type == 'EQUATION-DATA' && style.role == 'EQUATION-DEFINITION')
          )) {
       return;
     }
@@ -220,10 +220,10 @@ export class TeXFormatterObserver implements ObserverInstance {
     // These types have slightly different data morphologies, but are
     // similar enough we can process almost the same way
     debug("style",style);
-    if (style.type == 'SYMBOL' && style.role == 'SYMBOL-DEFINITION') {
+    if (style.type == 'SYMBOL-DATA' && style.role == 'SYMBOL-DEFINITION') {
       lhs = style.data.name;
       rhs = style.data.value;
-    } else if (style.type == 'EQUATION' && style.role == 'EQUATION-DEFINITION') {
+    } else if (style.type == 'EQUATION-DATA' && style.role == 'EQUATION-DEFINITION') {
       lhs = style.data.lhs;
       rhs = style.data.rhs;
     } else {
@@ -246,9 +246,9 @@ export class TeXFormatterObserver implements ObserverInstance {
     var tex_def = null;
     debug("type, role", style.type, style.role);
     debug("texlhs, texrhs",texrhs);
-    if (style.type == 'SYMBOL' && style.role == 'SYMBOL-DEFINITION') {
+    if (style.type == 'SYMBOL-DATA' && style.role == 'SYMBOL-DEFINITION') {
       tex_def = style.data.name + " = " + texrhs;
-    } else if (style.type == 'EQUATION' && style.role == 'EQUATION-DEFINITION') {
+    } else if (style.type == 'EQUATION-DATA' && style.role == 'EQUATION-DEFINITION') {
       const texlhs : string = await convertWolframToTeX(sub_expr_lhs);
       if (texrhs && texlhs) {
         tex_def = texlhs + " = " + texrhs
@@ -258,7 +258,7 @@ export class TeXFormatterObserver implements ObserverInstance {
     if (tex_def != null) {
       // Create the latex
       const styleProps: StylePropertiesWithSubprops = {
-        type: 'LATEX',
+        type: 'TEX-EXPRESSION',
         role: 'DECORATION',
         data: tex_def,
       }

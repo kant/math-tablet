@@ -50,7 +50,7 @@ export class FormulaCellView extends CellView {
     this.$prefix.innerHTML = style.subrole ? FORMULA_SUBROLE_PREFIX.get(style.subrole!)! : '';
 
     // Look for a LATEX REPRESENTATION.
-    let repStyle = this.notebookView.openNotebook.findStyle({ role: 'REPRESENTATION', type: 'LATEX' }, style.id);
+    let repStyle = this.notebookView.openNotebook.findStyle({ role: 'REPRESENTATION', type: 'TEX-EXPRESSION' }, style.id);
 
     let html: Html|undefined
     if (repStyle) {
@@ -106,13 +106,13 @@ export class FormulaCellView extends CellView {
     const style = this.notebookView.openNotebook.getStyle(this.styleId);
     // REVIEW: If we attached tool styles to the top-level style,
     //         then we would not need to do a recursive search.
-    const findOptions2: FindStyleOptions = { type: 'TOOL', recursive: true };
+    const findOptions2: FindStyleOptions = { type: 'TOOL-DATA', recursive: true };
     const toolStyles = this.notebookView.openNotebook.findStyles(findOptions2, style.id);
     for (const toolStyle of toolStyles) {
       const toolInfo: ToolInfo = toolStyle.data;
       let html: Html;
       if (toolInfo.tex) {
-        const latexRenderer = getRenderer('LATEX');
+        const latexRenderer = getRenderer('TEX-EXPRESSION');
         const results = latexRenderer!(toolInfo.tex);
         if (results.html) { html = results.html; }
         else { html = results.errorHtml!; }

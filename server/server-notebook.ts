@@ -250,7 +250,7 @@ export class ServerNotebook extends Notebook {
           const status = styleObject.data.status;
           const relationship = styleObject.data.relationship;
 
-          const reps = this.findStyles({ type: 'TEXT', recursive: true }, tls);
+          const reps = this.findStyles({ type: 'PLAIN-TEXT', recursive: true }, tls);
           var hint = "";
           for(const r of reps) {
             hint += r.data;
@@ -261,7 +261,7 @@ export class ServerNotebook extends Notebook {
         }
       } else {
         // REVIEW: Does this search need to be recursive?
-        const latex = this.findStyles({ type: 'LATEX', recursive: true }, tls);
+        const latex = this.findStyles({ type: 'TEX-EXPRESSION', recursive: true }, tls);
         if (latex.length > 1) { // here we have to have some disambiguation
           retLaTeX += "ambiguous: " +displayFormula(latex[0].data);
         } else if (latex.length == 1) {  // here it is obvious, maybe...
@@ -270,7 +270,7 @@ export class ServerNotebook extends Notebook {
 
 
         // REVIEW: Does this search need to be recursive?
-        const image = this.findStyles({ type: 'IMAGE', role: 'PLOT', recursive: true }, tls);
+        const image = this.findStyles({ type: 'IMAGE-URL', role: 'PLOT', recursive: true }, tls);
         if (image.length > 0) {
           const plot = image[0];
           const apath = this.absoluteDirectoryPath();
@@ -289,7 +289,7 @@ export class ServerNotebook extends Notebook {
         // .svgs, but not necessarily, which allows the possibility
         // of photographs being included in output later.
         // REVIEW: Does this search need to be recursive?
-        const svgs = this.findStyles({ type: 'SVG', recursive: true }, tls);
+        const svgs = this.findStyles({ type: 'SVG-MARKUP', recursive: true }, tls);
 
         debug("SVGS:",svgs);
         debug("tlso:",styleObject);
@@ -559,7 +559,7 @@ export class ServerNotebook extends Notebook {
     tlso.forEach( tls => {
       // console.error("operating on tls:",tls);
       // REVIEW: Does this search need to be recursive?
-      const syms = this.findStyles({ type: 'SYMBOL', recursive: true }, tls);
+      const syms = this.findStyles({ type: 'SYMBOL-DATA', recursive: true }, tls);
       syms.forEach(sym => {
         const s = sym.data.name;
         symbols.add(s);
@@ -581,7 +581,7 @@ export class ServerNotebook extends Notebook {
     tlso.forEach( tls => {
       // console.error("operating on tls:",tls);
       // REVIEW: Does this search need to be recursive?
-      const syms = this.findStyles({ type: 'SYMBOL', recursive: true }, tls);
+      const syms = this.findStyles({ type: 'SYMBOL-DATA', recursive: true }, tls);
       syms.forEach(sym => {
         const s = sym.data.name;
         if (symbols.has(s)) {

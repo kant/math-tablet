@@ -87,13 +87,13 @@ describe("test symbol observer", function() {
       const style = notebook.topLevelStyleOf(1);
 
       // This is fragile and stupid.
-//      assert.deepEqual(style.type,'WOLFRAM');
+//      assert.deepEqual(style.type,'WOLFRAM-EXPRESSION');
 
       // Now we want to try to create two child requests,
       // and see that only one is created
       const fake_result = "4";
       const styleProps1: StylePropertiesWithSubprops = {
-        type: 'WOLFRAM',
+        type: 'WOLFRAM-EXPRESSION',
         data: <string>fake_result,
         role: 'EVALUATION',
         exclusiveChildTypeAndRole: true,
@@ -105,7 +105,7 @@ describe("test symbol observer", function() {
       };
 
       const styleProps2: StylePropertiesWithSubprops = {
-        type: 'WOLFRAM',
+        type: 'WOLFRAM-EXPRESSION',
         data: <string>fake_result,
         role: 'EVALUATION',
         exclusiveChildTypeAndRole: true,
@@ -120,11 +120,11 @@ describe("test symbol observer", function() {
       // Now we want to assert that "style" has only one WOLFRAM EVALUATION
       // child.
       // REVIEW: Does this search need to be recursive?
-      const childEvaluation = notebook.findStyles({ type: 'WOLFRAM', role: 'EVALUATION', recursive: true }, style.id);
+      const childEvaluation = notebook.findStyles({ type: 'WOLFRAM-EXPRESSION', role: 'EVALUATION', recursive: true }, style.id);
       assert(childEvaluation.length == 1,"There should be one evaluation, but there are:"+childEvaluation.length);
 
 
-      const childRepresentation = notebook.findStyles({ type: 'WOLFRAM', role: 'REPRESENTATION', recursive: true }, style.id);
+      const childRepresentation = notebook.findStyles({ type: 'WOLFRAM-EXPRESSION', role: 'REPRESENTATION', recursive: true }, style.id);
       assert(childRepresentation.length == 1,"There should be one evaluation, but there are:"+childRepresentation.length);
 
 
@@ -169,7 +169,7 @@ describe("test symbol observer", function() {
       await serializeChangeRequests(notebook,changeRequests);
 //      await notebook.requestChanges('TEST', changeRequests);
       const style = notebook.topLevelStyleOf(1);
-      assert.deepEqual(style.type,'WOLFRAM');
+      assert.deepEqual(style.type,'WOLFRAM-EXPRESSION');
 
       assert.equal(notebook.allRelationships().length,1);
       const deleteReq : StyleDeleteRequest = { type: 'deleteStyle',
@@ -191,7 +191,7 @@ describe("test symbol observer", function() {
       await notebook.requestChanges('TEST', changeRequests1);
 
       const style = notebook.topLevelStyleOf(1);
-      assert.deepEqual(style.type,'WOLFRAM');
+      assert.deepEqual(style.type,'WOLFRAM-EXPRESSION');
       assert.equal(notebook.allRelationships().length,2);
       // We want to check that the relaionship is "duplicate def".
       const r : RelationshipObject = notebook.allRelationships()[0];
@@ -274,7 +274,7 @@ describe("test symbol observer", function() {
       // I really want a way to find this from the notebook....
       const initialId = 1;
       // REVIEW: Does this search need to be recursive?
-      const children = notebook.findStyles({ type: 'EQUATION', recursive: true }, initialId);
+      const children = notebook.findStyles({ type: 'EQUATION-DATA', recursive: true }, initialId);
       assert.equal(1,children.length);
     });
 
@@ -338,7 +338,7 @@ describe("test symbol observer", function() {
       const lastThought = notebook.getStyle(lastThoughtId);
 
       // REVIEW: Does this search need to be recursive?
-      const children = notebook.findStyles({ type: 'LATEX', recursive: true }, lastThought.id);
+      const children = notebook.findStyles({ type: 'TEX-EXPRESSION', recursive: true }, lastThought.id);
       const texformatter = children[0];
       assert.equal('Y = 36',texformatter.data);
       const rels = notebook.recomputeAllSymbolRelationships();
@@ -390,7 +390,7 @@ describe("test symbol observer", function() {
       const lastThought = notebook.getStyle(lastThoughtId);
 
       // REVIEW: Does this search need to be recursive?
-      const texformatter = notebook.findStyle({ type: 'LATEX', recursive: true}, lastThought.id);
+      const texformatter = notebook.findStyle({ type: 'TEX-EXPRESSION', recursive: true}, lastThought.id);
       assert.equal('Y = 16',texformatter!.data);
 
 
@@ -531,7 +531,7 @@ describe("test symbol observer", function() {
       await serializeChangeRequests(notebook,[cr]);
       // Now there should be only ONE EQUATION-DEFINITON attached to the single input!!!
       // REVIEW: Does this search need to be recursive?
-      const children = notebook.findStyles({ type: 'EQUATION', recursive: true }, initialId);
+      const children = notebook.findStyles({ type: 'EQUATION-DATA', recursive: true }, initialId);
       assert.equal(1,children.length);
     });
 
@@ -562,7 +562,7 @@ describe("test symbol observer", function() {
         data: data[3],
       };
       await serializeChangeRequests(notebook,[cr1]);
-      const texformatter = notebook.findStyle({ type: 'LATEX', recursive: true},
+      const texformatter = notebook.findStyle({ type: 'TEX-EXPRESSION', recursive: true},
                                               initialId);
       assert.equal('x = 4',texformatter!.data);
     });
@@ -613,7 +613,7 @@ function texformatOfLastThought(notebook : ServerNotebook) : string {
   // LATEX type...
   const lastThought = notebook.getStyle(lastThoughtId);
   // REVIEW: Does this search need to be recursive?
-  const texformatter = notebook.findStyle({ type: 'LATEX', recursive: true }, lastThought.id);
+  const texformatter = notebook.findStyle({ type: 'TEX-EXPRESSION', recursive: true }, lastThought.id);
   return texformatter!.data;
 }
 

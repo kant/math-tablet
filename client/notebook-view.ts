@@ -185,7 +185,7 @@ export class NotebookView {
     const styleProps: StylePropertiesWithSubprops = {
       role: 'HINT', type: 'HINT-DATA', data,
       subprops: [
-        { role: 'REPRESENTATION', subrole: 'INPUT', type: 'TEXT', data: "" },
+        { role: 'REPRESENTATION', subrole: 'INPUT', type: 'PLAIN-TEXT', data: "" },
       ]
     };
 
@@ -212,7 +212,7 @@ export class NotebookView {
     const styleProps: StylePropertiesWithSubprops = {
       role: 'FORMULA', subrole: 'OTHER', type: 'FORMULA-DATA', data: null,
       subprops: [
-        { role: 'REPRESENTATION', subrole: 'INPUT', type: 'STROKES', data }
+        { role: 'REPRESENTATION', subrole: 'INPUT', type: 'STROKE-DATA', data }
       ]
     };
     const changeRequest: StyleInsertRequest = { type: 'insertStyle', afterId, styleProps };

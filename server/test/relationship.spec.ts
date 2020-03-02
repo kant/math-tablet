@@ -77,12 +77,12 @@ describe("test relationships", function() {
       const F1 = notebook.topLevelStyleOf(1);
       assert.deepEqual(F1.type,'FORMULA-DATA');
 
-      const F1_wolfram = notebook.findStyle({ type: 'WOLFRAM', role: 'EVALUATION', recursive: true }, F1.id);
+      const F1_wolfram = notebook.findStyle({ type: 'WOLFRAM-EXPRESSION', role: 'EVALUATION', recursive: true }, F1.id);
 
       assert.isNotNull(F1_wolfram);
 
 
-      const F1_algebra_tools = notebook.findStyles({ type: 'TOOL', source: 'ALGEBRAIC-TOOLS', recursive: true }, F1_wolfram!.id);
+      const F1_algebra_tools = notebook.findStyles({ type: 'TOOL-DATA', source: 'ALGEBRAIC-TOOLS', recursive: true }, F1_wolfram!.id);
       // There will be several tools, we select the one whose "name" is "factor"
       const F1_factor_tool = F1_algebra_tools.find( e => e.data.name == "factor");
 
@@ -91,12 +91,12 @@ describe("test relationships", function() {
       // I'm suspecting the high-level API for this could be improved...
       await notebook.useTool(F1_factor_tool!.id);
 
-      var Wolframs = notebook.findStyles({ type: 'WOLFRAM', role: 'EVALUATION', recursive: true });
+      var Wolframs = notebook.findStyles({ type: 'WOLFRAM-EXPRESSION', role: 'EVALUATION', recursive: true });
 
       assert.equal(Wolframs.length,2);
       const F2_wolfram = Wolframs.find(w => w.id != F1.id );
 
-      const F2_algebra_tools = notebook.findStyles({ type: 'TOOL', source: 'ALGEBRAIC-TOOLS', recursive: true }, F2_wolfram!.id);
+      const F2_algebra_tools = notebook.findStyles({ type: 'TOOL-DATA', source: 'ALGEBRAIC-TOOLS', recursive: true }, F2_wolfram!.id);
       // There will be several tools, we select the one whose "name" is "factor"
       const F2_simplify_tool = F2_algebra_tools.find( e => e.data.name == "simplify");
 
@@ -104,7 +104,7 @@ describe("test relationships", function() {
 
       // Now, having accomplished this, we wish to change F1 and observe
       // that that change propagatest to F3.
-      Wolframs = notebook.findStyles({ type: 'WOLFRAM', role: 'EVALUATION', recursive: true });
+      Wolframs = notebook.findStyles({ type: 'WOLFRAM-EXPRESSION', role: 'EVALUATION', recursive: true });
       const F3_wolfram = Wolframs.find(w => (w.id != F1.id && w.id != F2_wolfram!.id));
 
 
@@ -142,7 +142,7 @@ return inputs.map(wolframData=>{
 const data: FormulaData = { wolframData };
 const request: StyleInsertRequest = {
 type: 'insertStyle',
-  // styleProps: { role: 'REPRESENTATION', type: 'WOLFRAM', data },
+  // styleProps: { role: 'REPRESENTATION', type: 'WOLFRAM-EXPRESSION', data },
   styleProps: { role: 'FORMULA', type: 'FORMULA-DATA', data: {wolframData: data} },
 };
 return request;

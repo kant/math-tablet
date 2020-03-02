@@ -128,7 +128,7 @@ describe("server notebook", function() {
         type: 'FORMULA-DATA',
         data: formulaData,
         subprops: [
-          { type: 'TOOL', role: 'ATTRIBUTE', data: toolInfo },
+          { type: 'TOOL-DATA', role: 'ATTRIBUTE', data: toolInfo },
         ]
       };
       const insertRequest: StyleInsertRequest = { type: 'insertStyle', styleProps };
@@ -140,8 +140,8 @@ describe("server notebook", function() {
       const changesSync: NotebookChange[] = onChangesSyncSpy.lastCall.args[0];
       assert.equal(changesAsync.length, 2);
       assert.equal(changesSync.length, 2);
-      const toolChangeAsync = changesAsync.find(c=> c && c.type=='styleInserted' && c.style.type=='TOOL');
-      const toolChangeSync = changesSync.find(c=> c && c.type=='styleInserted' && c.style.type=='TOOL');
+      const toolChangeAsync = changesAsync.find(c=> c && c.type=='styleInserted' && c.style.type=='TOOL-DATA');
+      const toolChangeSync = changesSync.find(c=> c && c.type=='styleInserted' && c.style.type=='TOOL-DATA');
       assert.exists(toolChangeAsync);
       assert.exists(toolChangeSync);
       const toolStyle = (<StyleInserted>toolChangeAsync).style;

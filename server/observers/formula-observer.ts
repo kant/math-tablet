@@ -57,7 +57,7 @@ export class FormulaObserver extends BaseObserver {
         role: 'REPRESENTATION',
         subrole: 'INPUT',
         source: 'USER',
-        type: 'WOLFRAM',
+        type: 'WOLFRAM-EXPRESSION',
       },
       styleRelation: StyleRelation.ChildToParent,
       // REVIEW: Are props necessary in ChildToParent relations? Validate that parent has expected props?
@@ -78,7 +78,7 @@ export class FormulaObserver extends BaseObserver {
       props: {
         role: 'REPRESENTATION',
         subrole: 'ALTERNATE',
-        type: 'WOLFRAM',
+        type: 'WOLFRAM-EXPRESSION',
       },
       computeSync: FormulaObserver.renderFormulaToWolframRepresentation,
     },

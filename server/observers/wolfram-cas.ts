@@ -54,24 +54,24 @@ export class WolframObserver extends BaseObserver {
   private static RULES: Rules = [
     {
       name: "tex-to-wolfram",
-      styleTest: { role: 'REPRESENTATION', type: 'LATEX', notSource: 'WOLFRAM-OBSERVER' },
+      styleTest: { role: 'REPRESENTATION', type: 'TEX-EXPRESSION', notSource: 'WOLFRAM-OBSERVER' },
       styleRelation: StyleRelation.PeerToPeer,
-      props: { role: 'REPRESENTATION', subrole: 'ALTERNATE', type: 'WOLFRAM' },
+      props: { role: 'REPRESENTATION', subrole: 'ALTERNATE', type: 'WOLFRAM-EXPRESSION' },
       computeAsync: WolframObserver.ruleConvertTexToWolfram,
     },
     {
       name: "wolfram-to-tex",
-      styleTest: { role: 'REPRESENTATION', subrole: 'INPUT', type: 'WOLFRAM' },
+      styleTest: { role: 'REPRESENTATION', subrole: 'INPUT', type: 'WOLFRAM-EXPRESSION' },
       styleRelation: StyleRelation.PeerToPeer,
-      props: { role: 'REPRESENTATION', subrole: 'ALTERNATE', type: 'LATEX' },
+      props: { role: 'REPRESENTATION', subrole: 'ALTERNATE', type: 'TEX-EXPRESSION' },
       computeAsync: WolframObserver.ruleConvertWolframToTex,
     },
     {
       name: "evaluate-wolfram",
       // REVIEW: Should evaluation be attached to FORMULA, rather than REPRESENTATION?
-      styleTest: { role: 'REPRESENTATION', type: 'WOLFRAM' },
+      styleTest: { role: 'REPRESENTATION', type: 'WOLFRAM-EXPRESSION' },
       styleRelation: StyleRelation.ParentToChild,
-      props: { role: 'EVALUATION', type: 'WOLFRAM' },
+      props: { role: 'EVALUATION', type: 'WOLFRAM-EXPRESSION' },
       computeAsync: WolframObserver.ruleEvaluateWolframExpr,
     },
   ];

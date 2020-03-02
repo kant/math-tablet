@@ -119,7 +119,7 @@ export class AlgebraicToolsObserver implements ObserverInstance {
       role: 'HINT', type: 'HINT-DATA', data,
       id: hintId,
       subprops: [
-        { role: 'REPRESENTATION', subrole: 'INPUT', type: 'TEXT', data: `From ${toolInfo.name}` },
+        { role: 'REPRESENTATION', subrole: 'INPUT', type: 'PLAIN-TEXT', data: `From ${toolInfo.name}` },
       ]
     };
     const hintReq: StyleInsertRequest = {
@@ -250,7 +250,7 @@ export class AlgebraicToolsObserver implements ObserverInstance {
                                  data,
                                  origin_id: style.id};
     const styleProps2: StylePropertiesWithSubprops = {
-      type: 'TOOL',
+      type: 'TOOL-DATA',
       role: 'ATTRIBUTE',
       data: toolInfo,
     }
@@ -316,7 +316,7 @@ export class AlgebraicToolsObserver implements ObserverInstance {
 
   private async algebraicToolsStyleInsertRule(style: StyleObject, rval: NotebookChangeRequest[]): Promise<void> {
 
-    if (style.type != 'WOLFRAM' || style.role != 'EVALUATION') { return; }
+    if (style.type != 'WOLFRAM-EXPRESSION' || style.role != 'EVALUATION') { return; }
 
     // TODO: collect these strings in some way so that
     // if they are duplicates (which happens often), we add only
@@ -389,7 +389,7 @@ export class AlgebraicToolsObserver implements ObserverInstance {
       // It is unclear how we will handle the changes of the tools
       // in this case, which still must be accomplished.
       // I believe this will require separate action...
-      this.removeAllOffspringOfType(origin_top,rval,'TOOL');
+      this.removeAllOffspringOfType(origin_top,rval,'TOOL-DATA');
 
       await this.algebraicToolsStyleInsertRule(style, rval);
 

@@ -187,6 +187,7 @@ export interface RelationshipProperties {
   status?: HintStatus;
   logic?: HintRelationship;
   data?: any;
+  // REVIEW: Use role: DATAFLOW with a subrole instead of dataflow flag?
   dataflow?: boolean;
 }
 
@@ -300,21 +301,21 @@ export const STYLE_TYPES = [
   'FORMULA-DATA',    // Type of data for top-level 'FORMULA' styles
   'HINT-DATA',       // Type of data for top-level 'HINT' styles
   'HTML',            // Html: HTML-formatted text
-  'IMAGE',           // ImageData: URL of image relative to notebook folder.
-  'JIIX',            // Jiix: MyScript JIIX export from 'MATH' editor.
-  'LATEX',           // LatexData: LaTeX string // TODO: rename 'TEX'
-  'CLASSIFICATION',  // DEPRECATED: A classifcication of the style.
-  'MATHML',          // MathMlData: MathML Presentation XML
-  'STROKES',         // Strokes of user sketch in our own format.
-  'SYMBOL',          // SymbolData: symbol in a definition or expression.
-  'SOLUTION',        // The result of a "solve" operation
-  'SVG',             // SvgData: SVG markup
+  'IMAGE-URL',       // ImageData: URL of image relative to notebook folder.
+  'MYSCRIPT-DATA',   // Jiix: MyScript JIIX export from 'MATH' editor.
+  'TEX-EXPRESSION',      // LatexData: LaTeX string // TODO: rename 'TEX'
+  'CLASSIFICATION-DATA',  // DEPRECATED: A classifcication of the style.
+  'MATHML-XML',      // MathMlData: MathML Presentation XML
+  'STROKE-DATA',     // Strokes of user sketch in our own format.
+  'SYMBOL-DATA',     // SymbolData: symbol in a definition or expression.
+  'SOLUTION-DATA',   // The result of a "solve" operation
+  'SVG-MARKUP',      // SvgData: SVG markup
   'PLOT-DATA',       // Generic type to handle unspecified plot data
-  'EQUATION',        // An equation (ambiguously assertion or relation)
-  'TEXT',            // TextData: Plain text
-  'TOOL',            // ToolInfo: Tool that can be applied to the parent style.
-  'UNKNOWN',         // Type is as-yet unknown. Data field should be 'null'.
-  'WOLFRAM',         // WolframData: Wolfram language expression
+  'EQUATION-DATA',   // An equation (ambiguously assertion or relation)
+  'PLAIN-TEXT',      // TextData: Plain text  // REVIEW: Encoding? UTF-8?
+  'TOOL-DATA',       // ToolInfo: Tool that can be applied to the parent style.
+  // 'UNKNOWN',       // Type is as-yet unknown. Data field should be 'null'.
+  'WOLFRAM-EXPRESSION', // WolframData: Wolfram language expression
 ] as const;
 export type StyleType = typeof STYLE_TYPES[number];
 
@@ -340,7 +341,7 @@ export type StyleSource = typeof STYLE_SOURCES[number];
 
 // Constants
 
-export const VERSION = "0.0.13";
+export const VERSION = "0.0.14";
 
 // Exported Class
 
@@ -685,7 +686,7 @@ export class Notebook {
     style.data = change.style.data;
     // This is experimental; for SVG, we need a timestamp for
     // cleaning up the .PNG files
-    if (style.type == 'SVG') {
+    if (style.type == 'SVG-MARKUP') {
       // @ts-ignore
       style.timestamp = Date.now();
     }
