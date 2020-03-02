@@ -80,37 +80,32 @@ export abstract class BaseObserver implements ObserverInstance {
 
   public async onChangesAsync(changes: NotebookChange[]): Promise<NotebookChangeRequest[]> {
     // IMPORTANT: This code is identical to onChangesSync, except this code has awaits and that code doesn't.
-    debug(`onChangesAsync ${this.notebook._path} ${changes.length}`);
     const rval: NotebookChangeRequest[] = [];
-    for (const rule of this.rules) {
-      // If the rule is asynchronous, then don't bother.
-      if (!isAsyncRule(rule)) { continue; }
-
-      for (const change of changes) {
-        if (!change) { /* REVIEW: Don't allow falsy changes */ continue; }
+    for (const change of changes) {
+      if (!change) { /* REVIEW: Don't allow falsy changes */ continue; }
+      for (const rule of this.rules) {
+        // If the rule is asynchronous, then don't bother.
+        // TODO: separate list of sync rules from async rules.
+        if (!isAsyncRule(rule)) { continue; }
         const changeRequest = await this.onChangeAsync(rule, change);
         if (changeRequest) { rval.push(changeRequest); }
       }
     }
-    debug(`onChangesAsync returning ${rval.length} changes.`);
     return rval;
   }
 
   public onChangesSync(changes: NotebookChange[]): NotebookChangeRequest[] {
     // IMPORTANT: This code is identical to onChangesAsync, except that code has awaits and this code doesn't.
-    debug(`onChangesSync ${changes.length}`);
     const rval: NotebookChangeRequest[] = [];
-    for (const rule of this.rules) {
-      // If the rule is asynchronous, then don't bother.
-      if (isAsyncRule(rule)) { continue; }
-
-      for (const change of changes) {
-        if (!change) { /* REVIEW: Don't allow falsy changes */ continue; }
+    for (const change of changes) {
+      if (!change) { /* REVIEW: Don't allow falsy changes */ continue; }
+      for (const rule of this.rules) {
+        // If the rule is asynchronous, then don't bother.
+        if (isAsyncRule(rule)) { continue; }
         const changeRequest = this.onChangeSync(rule, change);
         if (changeRequest) { rval.push(changeRequest); }
       }
     }
-    debug(`onChangesSync returning ${rval.length} changes.`);
     return rval;
   }
 
@@ -140,11 +135,12 @@ export abstract class BaseObserver implements ObserverInstance {
   // Private Instance Methods
 
   private async onChangeAsync(rule: AsyncRule, change: NotebookChange): Promise<NotebookChangeRequest|undefined> {
-    // TODO: The function in the rule should be an instance method, not a class method.
-    //       See how it is done in the dataflow-observer base class.
     // IMPORTANT: This code is identical to onChangeSync, except this code has awaits and that code doesn't.
     const inputData = this.preChange(rule, change);
     if (typeof inputData == 'undefined') { return undefined; }
+    // TODO: The function in the rule should be an instance method, not a class method.
+    //       See how it is done in the dataflow-observer base class.
+    debug(`Async rule ${this.constructor.name}/${rule.name} applied to ${JSON.stringify(change)}`);
     const outputData = await rule.computeAsync!.call(this.constructor, inputData);
     return this.postChange(rule, change, outputData);
   }
@@ -180,14 +176,15 @@ export abstract class BaseObserver implements ObserverInstance {
       case StyleRelation.ChildToParent:
         parentId = undefined;
         targetStyle = this.notebook.getStyle(change.style.parentId);
+        // TODO: Verify parent matches rule.props?
         break;
       case StyleRelation.ParentToChild:
         parentId = change.style.id;
-        targetStyle = this.notebook.findStyle({ role: rule.props.role, type: rule.props.type}, parentId);
+        targetStyle = this.notebook.findStyle({ role: rule.props.role, subrole: rule.props.subrole, type: rule.props.type}, parentId);
         break;
       case StyleRelation.PeerToPeer:
         parentId = change.style.parentId;
-        targetStyle = this.notebook.findStyle({ role: rule.props.role, type: rule.props.type}, parentId);
+        targetStyle = this.notebook.findStyle({ role: rule.props.role, subrole: rule.props.subrole, type: rule.props.type}, parentId);
         break;
     }
 
@@ -207,7 +204,9 @@ export abstract class BaseObserver implements ObserverInstance {
     }
 
     if (changeRequest) {
-      debug(`\nRule: ${JSON.stringify(rule)}\nChange: ${JSON.stringify(change)}\nYields: ${JSON.stringify(changeRequest)}]`);
+      debug(`Rule ${this.constructor.name}/${rule.name}\n  Applied to ${JSON.stringify(change)}\n  yields ${JSON.stringify(changeRequest)}`);
+    } else {
+      debug(`Rule ${this.constructor.name}/${rule.name}\n  Applied to ${JSON.stringify(change)}\n  yields no change.`);
     }
     return changeRequest;
   }
