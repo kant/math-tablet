@@ -130,12 +130,8 @@ export class MathematicaObserver implements ObserverInstance {
 
 
     const data_s : string =
-      style.data.wolframData ? style.data.wolframData : style.data;
-//    if (style.role == 'FORMULA') {
-//      data = style.data.wolframData;
-//    } else {
-//      data = style.data;
-//    }
+      (style.role == 'FORMULA') ? style.data.wolframData : style.data;
+
     if (isEmptyOrSpaces(data_s)) { return []; }
 
     const rval: NotebookChangeRequest[] = [];

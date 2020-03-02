@@ -90,16 +90,14 @@ export class WolframObserver extends BaseObserver {
 
   // One problem here is that we are not rewriting the single equal, which is the "math-tablet input" language,
   // to the double equal, which is essentially the wolfram language (thought not a one-to-one correspondence.)
-  //  private static async ruleEvaluateWolframExpr(expr: WolframData) : Promise<WolframData|undefined> {
-  private static async ruleEvaluateWolframExpr(expr: any) : Promise<WolframData|undefined> {
+  private static async ruleEvaluateWolframExpr(expr: WolframData) : Promise<WolframData|undefined> {
     // REVIEW: If evaluation fails?
     debug(`Evaluating: "${expr}".`);
-    const expr_s = (expr.wolframData) ? expr.wolframData : expr;
     let rval: WolframData|undefined;
-    if (isEmptyOrSpaces(expr_s)) {
+    if (isEmptyOrSpaces(expr)) {
       rval = undefined;
     } else {
-      const converted = convertMathTabletLanguageToWolfram(expr_s);
+      const converted = convertMathTabletLanguageToWolfram(expr);
       rval = await execute(`InputForm[runPrivate[${converted}]]`);
     }
     debug("Evaluated to: ", rval);
