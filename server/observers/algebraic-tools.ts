@@ -395,11 +395,6 @@ export class AlgebraicToolsObserver implements ObserverInstance {
       return;
     } else {
 
-      // It is unclear how we will handle the changes of the tools
-      // in this case, which still must be accomplished.
-      // I believe this will require separate action...
-      this.removeAllOffspringOfType(style,rval,'TOOL');
-      await this.algebraicToolsStyleInsertRule(style, rval);
 
 
       // The relationship will be tied to the Representation
@@ -413,6 +408,13 @@ export class AlgebraicToolsObserver implements ObserverInstance {
       // We have to find based on the top level formula
       // WARNING UGLY HACK CODE (DUPLICATION OF ABOVE)
       const origin_top = this.notebook.topLevelStyleOf(style.id);
+
+      // It is unclear how we will handle the changes of the tools
+      // in this case, which still must be accomplished.
+      // I believe this will require separate action...
+      this.removeAllOffspringOfType(origin_top,rval,'TOOL');
+
+      await this.algebraicToolsStyleInsertRule(style, rval);
 
       var fromId : number;
       if (origin_top.role == 'FORMULA' && origin_top.type == 'FORMULA-DATA') {
