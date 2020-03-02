@@ -26,13 +26,11 @@ const debug = debug1(`server:${MODULE}`);
 import { StyleType,NotebookChange, StyleObject,
          RelationshipObject,
          RelationshipProperties,
-         FindRelationshipOptions,
          HintData, HintRelationship, HintStatus, FormulaData} from '../../client/notebook';
-import { ToolInfo, NotebookChangeRequest, StyleInsertRequest, StyleDeleteRequest, StylePropertiesWithSubprops, WolframData,
-         ToolData,RelationshipInsertRequest,
-//         RelationshipDeleteRequest,
-         StyleChangeRequest,
-       } from '../../client/math-tablet-api';
+import {
+  ToolInfo, NotebookChangeRequest, StyleInsertRequest, StyleDeleteRequest, StylePropertiesWithSubprops, WolframData,
+  ToolData,RelationshipInsertRequest,
+} from '../../client/math-tablet-api';
 
 import {
   DataflowStatus,
@@ -133,16 +131,6 @@ export class AlgebraicToolsObserver implements ObserverInstance {
     //   role: 'FORMULA',
     //   type: 'FORMULA-DATA',
     //   data: { wolframData: toolData.output },
-    //   subprops: [{
-    //     id: toId,
-    //     role: 'REPRESENTATION',
-    //     type: 'WOLFRAM',
-    //     data: toolData.output,
-    //     subrole: 'INPUT',
-    //     // REVIEW: Possibly this should be 'FACTORIZATION'
-    //     // or some other meaning. 'INPUT' is a stop-gap
-    //     // to work with the current GUI.
-    //   }],
     //   relationsFrom: {
     //     [fromId]: { role: 'TRANSFORMATION',
     //                 data: toolData,
@@ -152,19 +140,10 @@ export class AlgebraicToolsObserver implements ObserverInstance {
 
     const formulaData: FormulaData = { wolframData: toolData.output };
     const styleProps: StylePropertiesWithSubprops = {
+      id: toId,
       role: 'FORMULA',
       type: 'FORMULA-DATA',
       data: formulaData,
-      subprops: [{
-        id: toId,
-        role: 'REPRESENTATION',
-        type: 'WOLFRAM',
-        data: toolData.output,
-        subrole: 'INPUT',
-        // REVIEW: Possibly this should be 'FACTORIZATION'
-        // or some other meaning. 'INPUT' is a stop-gap
-        // to work with the current GUI.
-      }],
     };
 
     const changeReq: StyleInsertRequest = {
@@ -221,10 +200,6 @@ export class AlgebraicToolsObserver implements ObserverInstance {
         break;
       }
       case 'styleChanged': {
-        // Although this will be part of a higher-level API later,
-        // I am faking it here for the purpose of testing..
-        // his.checkUserInputChangeRule(change.style, rval);
-        // await this.fakeDataFlowStyleChangeRule(change.style, rval);
         //        await this.algebraicToolsStyleChangeRule(change.style, rval);
         break;
       }

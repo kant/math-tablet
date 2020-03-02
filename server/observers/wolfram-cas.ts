@@ -54,15 +54,15 @@ export class WolframObserver extends BaseObserver {
   private static RULES: Rules = [
     {
       name: "tex-to-wolfram",
-      styleTest: { role: 'REPRESENTATION', type: 'LATEX', notSource: 'WOLFRAM' },
-      styleRelation: StyleRelation.Peer,
+      styleTest: { role: 'REPRESENTATION', type: 'LATEX', notSource: 'WOLFRAM-OBSERVER' },
+      styleRelation: StyleRelation.PeerToPeer,
       props: { role: 'REPRESENTATION', subrole: 'ALTERNATE', type: 'WOLFRAM' },
       computeAsync: WolframObserver.ruleConvertTexToWolfram,
     },
     {
       name: "wolfram-to-tex",
       styleTest: { role: 'REPRESENTATION', subrole: 'INPUT', type: 'WOLFRAM' },
-      styleRelation: StyleRelation.Peer,
+      styleRelation: StyleRelation.PeerToPeer,
       props: { role: 'REPRESENTATION', subrole: 'ALTERNATE', type: 'LATEX' },
       computeAsync: WolframObserver.ruleConvertWolframToTex,
     },
@@ -70,7 +70,7 @@ export class WolframObserver extends BaseObserver {
       name: "evaluate-wolfram",
       // REVIEW: Should evaluation be attached to FORMULA, rather than REPRESENTATION?
       styleTest: { role: 'REPRESENTATION', type: 'WOLFRAM' },
-      styleRelation: StyleRelation.Parent,
+      styleRelation: StyleRelation.ParentToChild,
       props: { role: 'EVALUATION', type: 'WOLFRAM' },
       computeAsync: WolframObserver.ruleEvaluateWolframExpr,
     },

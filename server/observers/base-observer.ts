@@ -33,9 +33,9 @@ const debug = debug1(`server:${MODULE}`);
 // Types
 
 export enum StyleRelation {
-  Child = 0,
-  Parent = 1,
-  Peer = 2,
+  ChildToParent = 0,
+  ParentToChild = 1,
+  PeerToPeer = 2,
 }
 
 type StyleTestFunction = (notebook: ServerNotebook, style: StyleObject)=>boolean;
@@ -177,15 +177,15 @@ export abstract class BaseObserver implements ObserverInstance {
     let parentId: StyleId|undefined;
     let targetStyle: StyleObject|undefined|false;
     switch (rule.styleRelation) {
-      case StyleRelation.Child:
+      case StyleRelation.ChildToParent:
         parentId = undefined;
         targetStyle = this.notebook.getStyle(change.style.parentId);
         break;
-      case StyleRelation.Parent:
+      case StyleRelation.ParentToChild:
         parentId = change.style.id;
         targetStyle = this.notebook.findStyle({ role: rule.props.role, type: rule.props.type}, parentId);
         break;
-      case StyleRelation.Peer:
+      case StyleRelation.PeerToPeer:
         parentId = change.style.parentId;
         targetStyle = this.notebook.findStyle({ role: rule.props.role, type: rule.props.type}, parentId);
         break;

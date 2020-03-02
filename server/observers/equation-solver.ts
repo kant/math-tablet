@@ -98,12 +98,6 @@ export class EquationSolverObserver implements ObserverInstance {
       type: 'FORMULA-DATA',
       data: formulaData,
       relationsTo,
-      subprops: [{
-        role: 'REPRESENTATION',
-        subrole: 'ALTERNATE',
-        type: 'WOLFRAM',
-        data: wolframData,
-      }],
     };
     const changeReq: StyleInsertRequest = {
         type: 'insertStyle',

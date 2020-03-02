@@ -291,7 +291,7 @@ export const STYLE_SUBROLES = [
   'UNKNOWN',
 
   // REPRESENTATION subroles
-  'INPUT',          // TODO: Rename to 'PRIMARY'
+  'INPUT',
   'ALTERNATE',
 ];
 export type StyleSubrole = typeof STYLE_SUBROLES[number];
@@ -334,7 +334,7 @@ export const STYLE_SOURCES = [
   'SYSTEM',           // The Math-Tablet app itself, not the user or an observer.
   'TEST',             // An example source used only by our test system
   'USER',             // Directly entered by user
-  'WOLFRAM',          // Wolfram C.A.S.
+  'WOLFRAM-OBSERVER', // Wolfram C.A.S.
 ] as const;
 export type StyleSource = typeof STYLE_SOURCES[number];
 
@@ -454,6 +454,16 @@ export class Notebook {
     .map(styleId=>{
       const style = this.getStyle(styleId);
       return this.styleToHtml(style);
+    })
+    .join('');
+  }
+
+  // A textual representation useful for debugging.
+  public toText(): string {
+    return this.topLevelStyleOrder()
+    .map(styleId=>{
+      const style = this.getStyle(styleId);
+      return this.styleToText(style);
     })
     .join('');
   }
@@ -605,6 +615,15 @@ export class Notebook {
     return `<div><span class="leaf">R${relationship.id} ${relationship.role} [${inStylesHtml} &#x27a1; ${outStylesHtml}] (${relationship.fromId} &#x27a1; ${relationship.toId}) ${dataJson} logic: ${logic} status: ${status}</span></div>`;
   }
 
+  private relationshipToText(relationship: RelationshipObject, indentationLevel: number): string {
+    const dataJson = (typeof relationship.data != 'undefined' ? JSON.stringify(relationship.data) : 'undefined' );
+    const logic = relationship.logic;
+    const status = relationship.status;
+    const inStylesText = relationship.inStyles.map(rs=>`${rs.role} ${rs.id}`).join(", ");
+    const outStylesText = relationship.outStyles.map(rs=>`${rs.role} ${rs.id}`).join(", ");
+    return `${indentation(indentationLevel)}R${relationship.id} ${relationship.role} [${inStylesText} => ${outStylesText}] (${relationship.fromId}=> ${relationship.toId}) ${dataJson} logic: ${logic} status: ${status}\n`;
+  }
+
   private styleToHtml(style: StyleObject): Html {
     // TODO: This is very inefficient as notebook.childStylesOf goes through *all* styles.
     const childStyleObjects = Array.from(this.childStylesOf(style.id));
@@ -626,6 +645,33 @@ export class Notebook {
     ${relationshipsHtml}
   </div>
 </div>`;
+    }
+  }
+
+  private styleToText(style: StyleObject, indentationLevel: number = 0): string {
+    // TODO: This is very inefficient as notebook.childStylesOf goes through *all* styles.
+    const childStyleObjects = Array.from(this.childStylesOf(style.id));
+    // TODO: This is very inefficient as notebook.relationshipOf goes through *all* relationships.
+    const relationshipObjects = Array.from(this.relationshipsOf(style.id));
+    const dataJson = (typeof style.data != 'undefined' ? JSON.stringify(style.data) : 'undefined' );
+    const roleSubrole = (style.subrole ? `${style.role}|${style.subrole}` : style.role);
+    const styleInfo = `S${style.id} ${roleSubrole} ${style.type} ${style.source}`
+    if (childStyleObjects.length == 0 && relationshipObjects.length == 0 && dataJson.length<50) {
+      return `${indentation(indentationLevel)}${styleInfo} ${dataJson}\n`;
+    } else {
+      let rval: string;
+      if (dataJson.length<30) {
+        rval = `${indentation(indentationLevel)}${styleInfo}${dataJson}\n`;
+      } else {
+        rval = `${indentation(indentationLevel)}${styleInfo}\n${indentation(indentationLevel)}${dataJson}\n`;
+      }
+      for (const childStyle of childStyleObjects) {
+        rval += this.styleToText(childStyle, indentationLevel+1)
+      }
+      for (const relationship of relationshipObjects) {
+        rval += this.relationshipToText(relationship, indentationLevel+1);
+      }
+      return rval;
     }
   }
 
@@ -732,6 +778,8 @@ export function escapeHtml(str: string): Html {
             .replace('>', "&gt;")
             .replace('<', "&lt;");
 }
+
+function indentation(indentationLevel: number): string { return ' '.repeat(indentationLevel*2); }
 
 // TEMPORARY
 

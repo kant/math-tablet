@@ -59,7 +59,8 @@ export class FormulaObserver extends BaseObserver {
         source: 'USER',
         type: 'WOLFRAM',
       },
-      styleRelation: StyleRelation.Child,
+      styleRelation: StyleRelation.ChildToParent,
+      // REVIEW: Are props necessary in ChildToParent relations? Validate that parent has expected props?
       props: {
         role: 'FORMULA',
         // subrole: 'ALTERNATE',
@@ -67,12 +68,30 @@ export class FormulaObserver extends BaseObserver {
       },
       computeSync: FormulaObserver.parseWolframInput,
     },
+    {
+      name: "renderFormulaToWolfram",
+      styleTest: {
+        role: 'FORMULA',
+        type: 'FORMULA-DATA',
+      },
+      styleRelation: StyleRelation.ParentToChild,
+      props: {
+        role: 'REPRESENTATION',
+        subrole: 'ALTERNATE',
+        type: 'WOLFRAM',
+      },
+      computeSync: FormulaObserver.renderFormulaToWolframRepresentation,
+    },
   ];
 
   // Private Class Methods
 
-  private static parseWolframInput(wolframData: WolframData): FormulaData {
+  private static parseWolframInput(wolframData: WolframData): FormulaData|undefined {
     return { wolframData };
+  }
+
+  private static renderFormulaToWolframRepresentation(formulaData: FormulaData): WolframData|undefined {
+    return formulaData.wolframData;
   }
 
   // Private Constructor

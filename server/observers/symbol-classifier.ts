@@ -120,15 +120,6 @@ export class SymbolClassifierObserver implements ObserverInstance {
       role: 'FORMULA',
       type: 'FORMULA-DATA',
       data: formulaData,
-      subprops: [{
-        role: 'REPRESENTATION',
-        type: 'WOLFRAM',
-        data: toolStyle.data.data.output,
-        subrole: 'INPUT',
-        // REVIEW: Possibly this should be 'FACTORIZATION'
-        // or some other meaning. 'INPUT' is a stop-gap
-        // to work with the current GUI.
-      }],
     };
     const changeReq: StyleInsertRequest = {
       type: 'insertStyle',
