@@ -80,15 +80,6 @@ interface StyleOrderMapping {
 
 const MAX_CHANGE_ROUNDS = 10;
 
-// Helper Functions
-// TODO: Rewrite this to using findStyles
-export function assertHasStyle(styles: StyleObject[], type: StyleType, role: StyleRole, data: any): StyleObject {
-  const style = styles.find(s=>s.type==type && s.role==role && s.data==data);
-  assert.exists(style);
-  return style!;
-}
-
-
 // Exported Class
 
 export class ServerNotebook extends Notebook {
@@ -139,7 +130,11 @@ export class ServerNotebook extends Notebook {
   public static async open(notebookPath: NotebookPath): Promise<ServerNotebook> {
     // If the document is already open, then return the existing instance.
     const openNotebook = this.persistentNotebooks.get(notebookPath);
-    if (openNotebook) { return openNotebook; }
+    if (openNotebook) {
+      debug(`Opening in-memory notebook: "${notebookPath}"`);
+      return openNotebook;
+    }
+    debug(`Opening notebook from filesystem: "${notebookPath}"`)
     const json = await readNotebookFile(notebookPath);
     const notebook = await this.fromJSON(json, notebookPath);
     this.persistentNotebooks.set(notebookPath, notebook);
@@ -1221,4 +1216,13 @@ export class ServerNotebook extends Notebook {
     await writeNotebookFile(this._path, json);
     this.saving = false;
   }
+}
+
+// Helper Functions
+
+// TODO: Rewrite this to using findStyles
+export function assertHasStyle(styles: StyleObject[], type: StyleType, role: StyleRole, data: any): StyleObject {
+  const style = styles.find(s=>s.type==type && s.role==role && s.data==data);
+  assert.exists(style);
+  return style!;
 }

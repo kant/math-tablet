@@ -53,13 +53,13 @@ export class FormulaObserver extends BaseObserver {
   private static RULES: Rules = [
     {
       name: "parseWolframInput",
+      styleRelation: StyleRelation.ChildToParent,
       styleTest: {
         role: 'REPRESENTATION',
         subrole: 'INPUT',
         source: 'USER',
         type: 'WOLFRAM-EXPRESSION',
       },
-      styleRelation: StyleRelation.ChildToParent,
       // REVIEW: Are props necessary in ChildToParent relations? Validate that parent has expected props?
       props: {
         role: 'FORMULA',
@@ -69,12 +69,13 @@ export class FormulaObserver extends BaseObserver {
       computeSync: FormulaObserver.parseWolframInput,
     },
     {
+      // TODO: Is this going to result in REP/INPUT and REP/ALTERNATE both of type WOLFRAM-EXPRESSION?
       name: "renderFormulaToWolfram",
+      styleRelation: StyleRelation.ParentToChild,
       styleTest: {
         role: 'FORMULA',
         type: 'FORMULA-DATA',
       },
-      styleRelation: StyleRelation.ParentToChild,
       props: {
         role: 'REPRESENTATION',
         subrole: 'ALTERNATE',

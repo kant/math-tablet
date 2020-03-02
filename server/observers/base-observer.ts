@@ -192,7 +192,7 @@ export abstract class BaseObserver implements ObserverInstance {
     }
 
     let changeRequest: NotebookChangeRequest|undefined = undefined;
-    if (data) {
+    if (typeof data != 'undefined') {
       // Data was produced by the rule.
       // Change the target style if it exists, otherwise create the target style.
       if (targetStyle) {
@@ -207,9 +207,7 @@ export abstract class BaseObserver implements ObserverInstance {
     }
 
     if (changeRequest) {
-      debug(`Rule: ${JSON.stringify(rule)}`);
-      debug(`Change: ${JSON.stringify(change)}`);
-      debug(`Yields: ${JSON.stringify(changeRequest)}`);
+      debug(`\nRule: ${JSON.stringify(rule)}\nChange: ${JSON.stringify(change)}\nYields: ${JSON.stringify(changeRequest)}]`);
     }
     return changeRequest;
   }

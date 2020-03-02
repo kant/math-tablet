@@ -49,7 +49,7 @@ const RENDERERS = new Map<StyleType, Renderer>([
 
 export function getRenderer(type: StyleType): Renderer {
   const rval = RENDERERS.get(type);
-  assert(rval);
+  assert(rval, `Cannot find renderer for type ${type}`);
   return rval!;
 }
 
