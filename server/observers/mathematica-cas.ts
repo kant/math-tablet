@@ -129,9 +129,13 @@ export class MathematicaObserver implements ObserverInstance {
     debug("style in check equivalence rule",style);
 
 
+    // TODO: Does this server any purpose??
     const data_s : string =
-      (style.role == 'FORMULA') ? style.data.wolframData : style.data;
+      ((style.role == 'FORMULA') ||
+       (style.role == 'REPRESENTATION' && style.type == 'WOLFRAM-EXPRESSION'))
+    ? style.data : style.data;
 
+    debug("data_s",data_s);
     if (isEmptyOrSpaces(data_s)) { return []; }
 
     const rval: NotebookChangeRequest[] = [];
