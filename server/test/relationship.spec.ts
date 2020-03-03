@@ -70,7 +70,7 @@ describe("test relationships", function() {
     // Can we make a change to F1 that makes the tool inapplicable ( x^2 + x => 4) and see
     // that the forumalae and hints are correctly marked as changed.
 
-    it("Can derive formulae then propagate a change", async function(){
+    it.only("Can derive formulae then propagate a change", async function(){
       const data:string[] = [ "x + x^2", "2*x + 2*x^2"];
       const changeRequests = generateInsertRequests(data);
       await notebook.requestChanges('TEST', [changeRequests[0]]);
@@ -90,21 +90,26 @@ describe("test relationships", function() {
 
       var Formulas = notebook.findStyles({ type: 'FORMULA-DATA', role: 'FORMULA', recursive: true });
 
+      console.log(notebook.toText());
+
       assert.equal(Formulas.length,2);
       const F2 = Formulas.find(w => w.id != F1.id );
       console.log("F2",F2);
 
       const F2_algebra_tools = notebook.findStyles({ type: 'TOOL-DATA', source: 'ALGEBRAIC-TOOLS', recursive: true }, F2!.id);
+
+      console.log("F2_algebrat_tools", F2_algebra_tools);
       // There will be several tools, we select the one whose "name" is "factor"
-      const F2_simplify_tool = F2_algebra_tools.find( e => e.data.name == "simplify");
+      const F2_simplify_tool = F2_algebra_tools.find( e => e.data.name == "apart");
 
       await notebook.useTool(F2_simplify_tool!.id);
 
       // Now, having accomplished this, we wish to change F1 and observe
       // that that change propagatest to F3.
       Formulas = notebook.findStyles({ type: 'FORMULA-DATA', role: 'FORMULA', recursive: true });
-      const F3 = Formulas.find(w => (w.id != F1.id && w.id != F2!.id));
+      var F3 = Formulas.find(w => (w.id != F1.id && w.id != F2!.id));
 
+      console.log("F3 algebra",F3);
 
       // Now we will change something... and compare
       // F1 to F3
@@ -113,15 +118,17 @@ describe("test relationships", function() {
         styleId: F1!.id,
         data: { wolframData: data[1]}
       };
+      console.log("CCCCCCCCC",cr);
       await serializeChangeRequests(notebook,[cr]);
 
-
       console.log(notebook.toText());
+      var F3 = Formulas.find(w => (w.id != F1.id && w.id != F2!.id));
+      console.log("F3 algebra",F3);
 
       // First we will check that we have affected F2, then F3...
       // This is a bit fragile and wolfram specific...
-      assert.equal("2*x + 2*x^2",F2!.data);
-      assert.equal("2*x*(1 + x)",F3!.data);
+      assert.equal("2*x*(1 + x)",F2!.data);
+      assert.equal("2*x + 2*x^2",F3!.data);
 
     });
   });

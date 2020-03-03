@@ -88,10 +88,13 @@ export class FormulaObserver extends BaseObserver {
   // Private Class Methods
 
   private static parseWolframInput(wolframData: WolframData): FormulaData|undefined {
+    console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",wolframData);
     return { wolframData };
   }
 
   private static renderFormulaToWolframRepresentation(formulaData: FormulaData): WolframData|undefined {
+
+    console.log("XXXXXXXX SSSSSSSSSSSSSSSSSSSSS",formulaData);
     return formulaData.wolframData;
   }
 

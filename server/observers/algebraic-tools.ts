@@ -140,6 +140,8 @@ export class AlgebraicToolsObserver implements ObserverInstance {
     //   }
     // };
 
+    debug("toolData.output", toolData.output);
+
     const formulaData: FormulaData = { wolframData: toolData.output };
     const styleProps: StylePropertiesWithSubprops = {
       id: toId,
